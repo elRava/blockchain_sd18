@@ -1,8 +1,5 @@
 package registry;
 
-public interface Registry {
+public class Registry implements RegistryInterface {
 
-
-
-    
 }
