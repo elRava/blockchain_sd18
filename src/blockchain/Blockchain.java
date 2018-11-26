@@ -1,13 +1,19 @@
 package blockchain;
 
-public class Blockchain {
+import java.util.List;
+import java.util.Iterator;
+
+public class Blockchain implements Iterator<Block> {
+
+    // per iteratore
+    private Ring cursor;
 
     Ring first;
     Ring last;
 
 
     public Blockchain() {
-    
+        // crea anche blocco nullo
     }
 
     public boolean addBlock(Block block) {
@@ -15,12 +21,26 @@ public class Blockchain {
         return true;
     }
 
+    @Override
+    public boolean hasNext() {
+        return true;
+    }
+
+    @Override
+    public Block next() {
+        return null;
+    }
+
+    @Override
+    public void remove() {
+
+    }
 
 
     private class Ring {
 
         private Ring father;
-        private List sons;
+        private List<Ring> sons;
         private Block block;
 
         private Ring(Block block) {

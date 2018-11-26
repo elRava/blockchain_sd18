@@ -1,10 +1,11 @@
 package blockchain;
 
 import java.security.Timestamp;
+import java.util.List;
 
 public class Block {
 
-    private List listTransactions;
+    private List<Transaction> listTransactions;
     private String previousHash;
     private String hash;
     private long nonce;
@@ -24,7 +25,7 @@ public class Block {
     }
 
     public boolean verifyBlock(int difficulty) {
-
+        return true;
     }
 
 }
