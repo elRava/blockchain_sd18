@@ -3,10 +3,7 @@ package blockchain;
 import java.util.List;
 import java.util.Iterator;
 
-public class Blockchain implements Iterator<Block> {
-
-    // per iteratore
-    private Ring cursor;
+public class Blockchain {
 
     Ring first;
     Ring last;
@@ -21,18 +18,30 @@ public class Blockchain implements Iterator<Block> {
         return true;
     }
 
-    @Override
-    public boolean hasNext() {
-        return true;
+    private Iterator<Block> getIterator() {
+        return new BlockchainIterator();
     }
 
-    @Override
-    public Block next() {
-        return null;
-    }
 
-    @Override
-    public void remove() {
+    private class BlockchainIterator implements Iterator<Block> {
+
+        // per iteratore
+        private Ring cursor = first;
+
+        @Override
+        public boolean hasNext() {
+            return true;
+        }
+    
+        @Override
+        public Block next() {
+            return null;
+        }
+    
+        @Override
+        public void remove() {
+    
+        }
 
     }
 
