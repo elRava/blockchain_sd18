@@ -23,7 +23,7 @@ public class Transaction {
     private Timestamp creationTime;
     private PublicKey keySrc;
     private PublicKey keyDst;
-    private String signature;
+    private byte[] signature;
     private String transactionHash;
     //private String hash;
 
@@ -51,7 +51,7 @@ public class Transaction {
         //InetAddress*/
         this.creationTime = new Timestamp(System.currentTimeMillis());        
     }
-    public String getSignature() {
+    public byte[] getSignature() {
         return signature;
     }
 
@@ -76,7 +76,7 @@ public class Transaction {
 
         byte output[] = new byte[0]; //conterrà l'hash finale crittografato con la mia chiave privata
         try{
-            Signature ecdsa = Signature.getInstance("DSA", "SUN");
+            Signature ecdsa = Signature.getInstance("SHA1WithRSA");
             ecdsa.initSign(privateKey);
             //trasfomro l'input in un flusso di byte
             byte[] input = transactionHash.getBytes();
@@ -86,38 +86,30 @@ public class Transaction {
             output = realSig; //in realsign è contenuto l'array di byte del messaggio cifrato con la chiave privata
         }catch(NoSuchAlgorithmException nsae){
             nsae.printStackTrace();
-        }catch(NoSuchProviderException nspe){
-            nspe.printStackTrace();
         }catch(InvalidKeyException ike){
             ike.printStackTrace();
         }catch(SignatureException se){
             se.printStackTrace();
         }
         //salvo il messaggio cifrato in string con codifica utf8
-        try{
-            signature = new String(output,"UTF-8");
-        }catch(UnsupportedEncodingException uee){
-            uee.printStackTrace();
-        }    
-        
+        signature = output;
+                   
     }
 
     public boolean verify() {
         boolean verified = false;
         try {
-			Signature ecdsaVerify = Signature.getInstance("ECDSA", "BC");
+			Signature ecdsaVerify = Signature.getInstance("SHA1WithRSA");
 			ecdsaVerify.initVerify(keySrc);
 			ecdsaVerify.update(transactionHash.getBytes());
-			verified = ecdsaVerify.verify(signature.getBytes());
+			verified = ecdsaVerify.verify(signature);
 		}catch(NoSuchAlgorithmException nsae){
             nsae.printStackTrace();
         }catch(InvalidKeyException ike){
             ike.printStackTrace();
         }catch(SignatureException se){
             se.printStackTrace();
-        }catch(NoSuchProviderException nspe){
-            nspe.printStackTrace();
-        }
+        }    
         return verified;
     }
 

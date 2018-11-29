@@ -8,44 +8,61 @@ public class TestClass {
 
 
     public static void main(String[] args) {
-        Transaction t = new Transaction();
-        PublicKey pub = null;
-        PrivateKey pri = null;
+        //Transaction t = new Transaction();
+        PublicKey pubAlice = null;
+        PrivateKey priAlice = null;
         //creo chiave pubblica e privata
-        /*try {
-			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("ECDSA","BC");
-			SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-			ECGenParameterSpec ecSpec = new ECGenParameterSpec("prime192v1");
-			// Initialize the key generator and generate a KeyPair
-			keyGen.initialize(ecSpec, random);   //256 bytes provides an acceptable security level
-	        	KeyPair keyPair = keyGen.generateKeyPair();
-	        	// Set the public and private keys from the keyPair
-	        	privateKey = keyPair.getPrivate();
-	        	publicKey = keyPair.getPublic();
-		}catch(Exception e) {
-			throw new RuntimeException(e);
-        }
-        */
+        
         try{
-            KeyPairGenerator keygen = KeyPairGenerator.getInstance("DSA","SUN");
-            SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+            KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
             //Inizializzo il key generator
-            keygen.initialize(1024, random);
+            keygen.initialize(1024);
             KeyPair kp = keygen.genKeyPair();
-            pub = kp.getPublic();
-            pri = kp.getPrivate();
+            pubAlice = kp.getPublic();
+            priAlice = kp.getPrivate();
         }catch(Exception nsae){
             nsae.printStackTrace();
         }
         
-        String convPubintoString = Base64.getEncoder().encodeToString(pub.getEncoded());
-        String convPriintoString = Base64.getEncoder().encodeToString(pri.getEncoded());
+        String convPubintoStringAlice = Base64.getEncoder().encodeToString(pubAlice.getEncoded());
+        String convPriintoStringAlice = Base64.getEncoder().encodeToString(priAlice.getEncoded());
+        
+        /*KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(1024);
+        keyPair kpAlice = kpg.genKeyPair();
+*/
+        System.out.println("Chiave public Alice is "+convPubintoStringAlice);
+        System.out.println("Chiave private Alice is "+convPriintoStringAlice);
 
-        System.out.println("Chiave public is "+convPubintoString);
-        System.out.println("Chiave private is"+convPriintoString);
+        PublicKey pubBob = null;
+        PrivateKey priBob = null;
+        
+        try{
+            KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
+            //Inizializzo il key generator
+            keygen.initialize(1024);
+            KeyPair kp = keygen.genKeyPair();
+            pubBob = kp.getPublic();
+            priBob = kp.getPrivate();
+        }catch(Exception nsae){
+            nsae.printStackTrace();
+        }
+
+        String convPubintoStringBob = Base64.getEncoder().encodeToString(pubBob.getEncoded());
+        String convPriintoStringBob = Base64.getEncoder().encodeToString(priBob.getEncoded());
+
+        System.out.println("Chiave public Bob is "+convPubintoStringBob);
+        System.out.println("Chiave private Bob is "+convPriintoStringBob);
+        
+        Transaction t = new Transaction(5, pubAlice, pubBob);
+        t.sign(priBob);
+        System.out.println("Corretta? "+t.verify());
+
+
 
     }
 
+    
     
 
 }
