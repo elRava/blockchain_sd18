@@ -36,6 +36,26 @@ public class Block {
         this.previousHash = previousHash;
     }
 
+    public String getPreviousHash() {
+        return previousHash;
+    }
+
+    public String getHash() {
+        return hash;
+    }
+
+    public String getMerkleRoot() {
+        return merkleRoot;
+    }
+
+    public List<Transaction> getListTransactions() {
+        return listTransactions;
+    }
+
+    public Timestamp getMinedTime() {
+        return minedTime;
+    }
+
     private void calculateMerkleRoot() {
         // merkle of one single transaction is the hash itself
         String[] pendingHash = new String[listTransactions.size()];
