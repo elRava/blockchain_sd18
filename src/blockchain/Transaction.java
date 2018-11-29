@@ -9,9 +9,18 @@ public class Transaction {
     private PublicKey keySrc;
     private PublicKey keyDst;
     private String signature;
+    private String hash;
 
     public Transaction(Object data, PublicKey keySrc, PublicKey keyDst) {
         
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public String getHash() {
+        return hash;
     }
 
     public void sign(PrivateKey privateKey) {
