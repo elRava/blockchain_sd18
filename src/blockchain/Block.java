@@ -15,8 +15,9 @@ public class Block {
     private List<Transaction> listTransactions;
     private String previousHash;
     private String hash;
-    private AtomicLong nonce;
+    private long nonce;
     private String merkleRoot;
+    private AtomicLong tempNonce;
     private Timestamp minedTime;
     private boolean isMining;
 
@@ -24,7 +25,8 @@ public class Block {
         listTransactions = new ArrayList<>(LIST_LENGTH);
         previousHash = null;
         hash = null;
-        nonce = new AtomicLong();
+        //nonce = null;
+        tempNonce = new AtomicLong();
         merkleRoot = null;
         minedTime = null;
         isMining = false;
@@ -32,6 +34,26 @@ public class Block {
 
     public void setPreviousHash(String previousHash) {
         this.previousHash = previousHash;
+    }
+
+    public String getPreviousHash() {
+        return previousHash;
+    }
+
+    public String getHash() {
+        return hash;
+    }
+
+    public String getMerkleRoot() {
+        return merkleRoot;
+    }
+
+    public List<Transaction> getListTransactions() {
+        return listTransactions;
+    }
+
+    public Timestamp getMinedTime() {
+        return minedTime;
     }
 
     private void calculateMerkleRoot() {
@@ -64,6 +86,28 @@ public class Block {
         merkleRoot = pendingHash[0];
     }
 
+    private static String calculateHash(String previousHash, String merkleRoot, long nonce) {
+        // previous merkle root nonce
+        String s = previousHash + merkleRoot + nonce;
+        MessageDigest digest = null;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch(NoSuchAlgorithmException nsae) {
+            nsae.printStackTrace();
+            System.exit(1);
+        }
+        return new String(digest.digest(s.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    private static Boolean verifyHash(String hash, int difficulty) {
+        for(int i = 0; i < difficulty; i++) {
+            if(hash.charAt(i) != '0') {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public boolean addTransaction(Transaction transaction) {
         synchronized(listTransactions) {
             if(listTransactions.size() < LIST_LENGTH && !isMining) {
@@ -91,10 +135,8 @@ public class Block {
                 return false;
             }
         }
-        for(int i = 0; i < difficulty; i++) {
-            if(hash.charAt(i) != '0') {
-                return false;
-            }
+        if(! verifyHash(hash, difficulty)) {
+            return false;
         }
         return true;
     }
@@ -103,13 +145,42 @@ public class Block {
 
     private class minerThread implements Runnable {
 
+        private int difficulty;
+
+        public minerThread(int difficulty) {
+            this.difficulty = difficulty;
+        }
+
         public void run() {
 
             while(true) {
 
-                long nonceCopy = nonce.getAndIncrement();
+                if(minedTime != null) {
+                    return;
+                }
 
+                long nonceCopy = tempNonce.getAndIncrement();
 
+                // calculate hash
+                String tempHash = calculateHash(previousHash, merkleRoot, nonceCopy);
+
+                // verify correctness
+                if(! verifyHash(tempHash, difficulty)) {
+                    continue;
+                }
+
+                synchronized(minedTime) {
+                    // check if not already found correct hash
+                    if(minedTime != null) {
+                        return;
+                    }
+
+                    nonce = nonceCopy;
+                    hash = tempHash;
+
+                    return;
+
+                }
 
 
             }
