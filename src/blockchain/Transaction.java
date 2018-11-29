@@ -11,6 +11,10 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
+import java.util.*;
+import java.security.MessageDigest;
+import java.nio.charset.*;
+
 
 
 public class Transaction {
@@ -21,7 +25,9 @@ public class Transaction {
     private PublicKey keyDst;
     private String signature;
     private String transactionHash;
+    //private String hash;
 
+    //solo a scopo di debug
     public Transaction(){
         setCurrentTime();
         System.out.println(creationTime+"");
@@ -45,12 +51,32 @@ public class Transaction {
         //InetAddress*/
         this.creationTime = new Timestamp(System.currentTimeMillis());        
     }
+    public String getSignature() {
+        return signature;
+    }
+
+    //hash 256 di
+    //timestamp + data + publickeydest + publickeysource conccatenati senza spazi
+    private void setHash(){
+        String keyDestString = Base64.getEncoder().encodeToString(keyDst.getEncoded());
+        String keySrcString = Base64.getEncoder().encodeToString(keySrc.getEncoded());
+        String s = creationTime.toString()+payload.toString()+keyDestString+keySrcString;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            transactionHash = new String(digest.digest(s.getBytes(StandardCharsets.UTF_8)));
+        } catch(NoSuchAlgorithmException nsae) {
+            nsae.printStackTrace();
+            System.exit(1);
+        }
+    }
 
     public void sign(PrivateKey privateKey) {
-        //Effettuo l'hash
+        //imposto l'hash della transazione
+        setHash();
+
         byte output[] = new byte[0]; //conterrà l'hash finale crittografato con la mia chiave privata
         try{
-            Signature ecdsa = Signature.getInstance("ECDSA", "BC");
+            Signature ecdsa = Signature.getInstance("DSA", "SUN");
             ecdsa.initSign(privateKey);
             //trasfomro l'input in un flusso di byte
             byte[] input = transactionHash.getBytes();
@@ -95,10 +121,11 @@ public class Transaction {
         return verified;
     }
 
-    //hash 256 di
-    //timestamp + data + publickeydest + publickeysource conccatenati senza spazi
+    
     public String getTransactionHash(){
-        return null;
+        
+        return transactionHash;
+
     }
 
 
