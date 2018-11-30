@@ -60,7 +60,7 @@ public class Block {
         // merkle of one single transaction is the hash itself
         String[] pendingHash = new String[listTransactions.size()];
         for(int i = 0; i < pendingHash.length; i++) {
-            pendingHash[i] = listTransactions.get(i).getHash();
+            pendingHash[i] = listTransactions.get(i).getTransactionHash();
         }
         while(pendingHash.length > 1) {
             String[] calculated = new String[(listTransactions.size() + 1) / 2];
@@ -124,8 +124,13 @@ public class Block {
         isMining = true;
         calculateMerkleRoot();
 
+        MinerThread mt = new MinerThread(difficulty);
+        for(int i = 0; i < numThread; i++) {
+            new Thread(mt).start();
+        }
 
         minedTime = new Timestamp(System.currentTimeMillis());
+        isMining = false;
     }
 
     public boolean verifyBlock(int difficulty) {
@@ -143,11 +148,11 @@ public class Block {
 
 
 
-    private class minerThread implements Runnable {
+    private class MinerThread implements Runnable {
 
         private int difficulty;
 
-        public minerThread(int difficulty) {
+        public MinerThread(int difficulty) {
             this.difficulty = difficulty;
         }
 
