@@ -45,10 +45,14 @@ public class TestClass {
         /*KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(1024);
         keyPair kpAlice = kpg.genKeyPair();
+<<<<<<< HEAD
 
+=======
+*/  /*
+>>>>>>> c19893698593ae2ce9f7a3dca639af67acc06450
         System.out.println("Chiave public Alice is "+convPubintoStringAlice);
         System.out.println("Chiave private Alice is "+convPriintoStringAlice);
-
+*/
         PublicKey pubBob = null;
         PrivateKey priBob = null;
         
@@ -65,9 +69,10 @@ public class TestClass {
 
         String convPubintoStringBob = Base64.getEncoder().encodeToString(pubBob.getEncoded());
         String convPriintoStringBob = Base64.getEncoder().encodeToString(priBob.getEncoded());
-
+        /*
         System.out.println("Chiave public Bob is "+convPubintoStringBob);
         System.out.println("Chiave private Bob is "+convPriintoStringBob);
+<<<<<<< HEAD
         
         Transaction t = new Transaction(5, pubAlice, pubBob);
         t.sign(priBob);
@@ -81,6 +86,15 @@ public class TestClass {
         } catch(Exception e) {
 
         }
+=======
+        */
+        Transaction t1 = new Transaction(5, pubAlice, pubBob);
+        t1.sign(priAlice);
+        System.out.println("Corretta? "+t1.verify());
+
+        
+        System.out.println("HASH t1 "+t1.getTransactionHash());
+>>>>>>> c19893698593ae2ce9f7a3dca639af67acc06450
 
     }
 

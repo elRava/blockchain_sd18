@@ -3,6 +3,7 @@ package blockchain;
 import java.sql.Timestamp;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -64,18 +65,24 @@ public class Block {
             pendingHash[i] = listTransactions.get(i).getTransactionHash();
         }
         while(pendingHash.length > 1) {
-            String[] calculated = new String[(listTransactions.size() + 1) / 2];
+            byte[][] calculated = new byte[(listTransactions.size() + 1) / 2][SHA256LENGTH];
             int i = 0;
             while(i < calculated.length - 1) {
                 int j = 0;
-                String s = pendingHash[i++];
+                byte[] s = pendingHash[i++];
                 if(i < calculated.length) {
-                    s = s + pendingHash[i];
+                    //s = s + pendingHash[i];
+                    byte[] s1 = new byte[2 * SHA256LENGTH];
+                    for(int k = 0; k < s.length; k++) {
+                        s1[k] = s[k];
+                        s1[k + SHA256LENGTH] = pendingHash[i][k];
+                    }
+                    s = s1;
                 }
                 i++;
                 try {
                     MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                    calculated[j] = new String(digest.digest(s.getBytes(StandardCharsets.UTF_8)));
+                    calculated[j] = digest.digest(s);
                 } catch(NoSuchAlgorithmException nsae) {
                     nsae.printStackTrace();
                     System.exit(1);
@@ -87,9 +94,23 @@ public class Block {
         merkleRoot = pendingHash[0];
     }
 
-    private static String calculateHash(String previousHash, String merkleRoot, long nonce) {
+    private static byte[] calculateHash(byte[] previousHash, byte[] merkleRoot, long nonce) {
         // previous merkle root nonce
-        String s = previousHash + merkleRoot + nonce;
+        //String s = previousHash + merkleRoot + nonce;
+        ByteBuffer buff = ByteBuffer.allocate(Long.BYTES);
+        buff.putLong(nonce);
+        byte[] nonceByte = buff.array();
+        byte[] s = new byte[previousHash.length + merkleRoot.length + nonceByte.length];
+        for(int i = 0; i < previousHash.length; i++) {
+            s[i] = previousHash[i];
+        }
+        for(int i = 0; i < merkleRoot.length; i++) {
+            s[i + previousHash.length] = merkleRoot[i];
+        }
+        for(int i = 0; i < nonceByte.length; i++) {
+            s[i + previousHash.length + merkleRoot.length] = nonceByte[i];
+        }
+
         MessageDigest digest = null;
         try {
             digest = MessageDigest.getInstance("SHA-256");
@@ -97,12 +118,13 @@ public class Block {
             nsae.printStackTrace();
             System.exit(1);
         }
-        return new String(digest.digest(s.getBytes(StandardCharsets.UTF_8)));
+        return digest.digest(s);
     }
 
-    private static Boolean verifyHash(String hash, int difficulty) {
+    private static Boolean verifyHash(byte[] hash, int difficulty) {
+        String hashString = hashToString(hash);
         for(int i = 0; i < difficulty; i++) {
-            if(hash.charAt(i) != '0') {
+            if(hashString.charAt(i) != '0') {
                 return false;
             }
         }
@@ -148,6 +170,17 @@ public class Block {
     }
 
 
+    public static String hashToString(byte[] hash) {
+        StringBuffer hexString = new StringBuffer();
+        for (int i = 0; i < hash.length; i++) {
+            String hex = Integer.toHexString(0xff & hash[i]);
+            if(hex.length() == 1) hexString.append('0');
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
+
+
 
     private class MinerThread implements Runnable {
 
@@ -168,7 +201,7 @@ public class Block {
                 long nonceCopy = tempNonce.getAndIncrement();
 
                 // calculate hash
-                String tempHash = calculateHash(previousHash, merkleRoot, nonceCopy);
+                byte[] tempHash = calculateHash(previousHash, merkleRoot, nonceCopy);
 
                 // verify correctness
                 if(! verifyHash(tempHash, difficulty)) {
