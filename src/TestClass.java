@@ -101,7 +101,15 @@ public class TestClass {
         b.calculateMerkleRoot();
         System.out.println("merkle "+Block.hashToString(b.getMerkleRoot()));
 
+        Transaction t4 = new Transaction(35, pubAlice, pubBob);
+        t4.sign(priAlice);
+        b.addTransaction(t4);
+        //System.out.println("Corretta? "+t1.verify());
+        System.out.println("HASH t4 "+Block.hashToString(t4.getTransactionHash()));
+        b.calculateMerkleRoot();
+        System.out.println("merkle "+Block.hashToString(b.getMerkleRoot()));
 
+/*
         byte[] m2 = new byte[t1.getTransactionHash().length + t2.getTransactionHash().length];
         for(int i = 0; i < t1.getTransactionHash().length; i++) {
             m2[i] = t1.getTransactionHash()[i];
@@ -131,8 +139,24 @@ public class TestClass {
             nsae.printStackTrace();
             System.exit(1);
         }
+*/
+
+        b.setPreviousHash(t1.getTransactionHash());
+
+        System.out.println("prev " + Block.hashToString(b.getPreviousHash()));
+        System.out.println("merk " + Block.hashToString(b.getMerkleRoot()));
+        //System.out.println("prev " + Block.hashToString(b.getPreviousHash()));
 
 
+        long begin = System.currentTimeMillis();
+        b.mineBlock(5, 3);
+        long end = System.currentTimeMillis();
+
+        System.out.println("Block hash " + Block.hashToString(b.getHash()));
+        System.out.println("Mining Time " + (end-begin));
+
+
+        System.out.println("Verify hash " + Block.hashToString(b.calculateHash(b.getPreviousHash(), b.getMerkleRoot(), b.getNonce())));
 
 
     }

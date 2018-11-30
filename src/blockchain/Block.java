@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 
@@ -22,12 +23,15 @@ public class Block {
     private Timestamp minedTime;
     private boolean isMining;
 
+    private AtomicBoolean isMined;
+
     public Block() {
         listTransactions = new ArrayList<>(LIST_LENGTH);
         previousHash = null;
         hash = null;
         //nonce = null;
         tempNonce = new AtomicLong();
+        isMined = new AtomicBoolean(false);
         merkleRoot = null;
         minedTime = null;
         isMining = false;
@@ -47,6 +51,10 @@ public class Block {
 
     public byte[] getMerkleRoot() {
         return merkleRoot;
+    }
+
+    public long getNonce() {
+        return nonce;
     }
 
     public List<Transaction> getListTransactions() {
@@ -95,7 +103,7 @@ public class Block {
         merkleRoot = pendingHash[0];
     }
 
-    private static byte[] calculateHash(byte[] previousHash, byte[] merkleRoot, long nonce) {
+    public static byte[] calculateHash(byte[] previousHash, byte[] merkleRoot, long nonce) {
         // previous merkle root nonce
         //String s = previousHash + merkleRoot + nonce;
         ByteBuffer buff = ByteBuffer.allocate(Long.BYTES);
@@ -152,9 +160,17 @@ public class Block {
         for(int i = 0; i < numThread; i++) {
             new Thread(mt).start();
         }
-
-        minedTime = new Timestamp(System.currentTimeMillis());
+        synchronized(isMined){
+            while(!isMined.get()){
+                try{
+                    isMined.wait();
+                }catch(Exception e){
+                    e.printStackTrace();
+                }    
+            }
+        }
         isMining = false;
+        
     }
 
     public boolean verifyBlock(int difficulty) {
@@ -193,9 +209,12 @@ public class Block {
 
         public void run() {
 
+            System.out.println("Creato " + Thread.currentThread().getName());
+
             while(true) {
 
-                if(minedTime != null) {
+                if(isMined.get()) {
+                    //System.out.println("aaa");
                     return;
                 }
 
@@ -203,25 +222,27 @@ public class Block {
 
                 // calculate hash
                 byte[] tempHash = calculateHash(previousHash, merkleRoot, nonceCopy);
+                System.out.println(Thread.currentThread().getName() + "   nonce " + nonceCopy + "   " + hashToString(tempHash));
 
                 // verify correctness
                 if(! verifyHash(tempHash, difficulty)) {
                     continue;
                 }
 
-                synchronized(minedTime) {
+                synchronized(isMined) {
                     // check if not already found correct hash
-                    if(minedTime != null) {
+                    if(isMined.get()) {
                         return;
                     }
 
+                    isMined.set(true);
                     nonce = nonceCopy;
                     hash = tempHash;
-
+                    minedTime = new Timestamp(System.currentTimeMillis());
+                    isMined.notifyAll();
                     return;
 
                 }
-
 
             }
 
