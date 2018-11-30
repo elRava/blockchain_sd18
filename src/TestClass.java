@@ -2,6 +2,7 @@
 import java.security.*;
 import java.util.*;
 
+import blockchain.Block;
 import blockchain.Transaction;
 import java.sql.Timestamp;
 import java.net.InetAddress;
@@ -22,7 +23,7 @@ public class TestClass {
 
 
     public static void main(String[] args) {
-        /*
+        
         //Transaction t = new Transaction();
         PublicKey pubAlice = null;
         PrivateKey priAlice = null;
@@ -71,9 +72,24 @@ public class TestClass {
         Transaction t1 = new Transaction(5, pubAlice, pubBob);
         t1.sign(priAlice);
         System.out.println("Corretta? "+t1.verify());
+        System.out.println("HASH t1 "+Block.hashToString(t1.getTransactionHash()));
 
+        Transaction t2 = new Transaction(15, pubAlice, pubBob);
+        t2.sign(priAlice);
+        System.out.println("Corretta? "+t2.verify());
         
-        System.out.println("HASH t1 "+t1.getTransactionHash());
+        System.out.println("HASH t2 "+Block.hashToString(t2.getTransactionHash()));
+        String con = Block.hashToString(t1.getTransactionHash()) + Block.hashToString(t2.getTransactionHash());
+        System.out.println("Stringa merkle root "+con);
+        Block b = new Block();
+        b.addTransaction(t1);
+        b.calculateMerkleRoot();
+        //b.getMerkleRoot();
+        System.out.println("Merkle con solo una transazione is "+Block.hashToString(b.getMerkleRoot()));
+        b.addTransaction(t2);
+        b.calculateMerkleRoot();
+        System.out.println("Aggiunta t2");
+        System.out.println("Merkle con due transazioni is "+Block.hashToString(b.getMerkleRoot()));
 
     }
 

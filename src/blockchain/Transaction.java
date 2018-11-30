@@ -63,7 +63,7 @@ public class Transaction {
         String keyDestString = Base64.getEncoder().encodeToString(keyDst.getEncoded());
         String keySrcString = Base64.getEncoder().encodeToString(keySrc.getEncoded());
         String s = creationTime.toString()+payload.toString()+keyDestString+keySrcString;
-        System.out.println("Stringa da hashare "+s);
+        //System.out.println("Stringa da hashare "+s);
         try {
             /*
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

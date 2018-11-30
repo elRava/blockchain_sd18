@@ -57,7 +57,7 @@ public class Block {
         return minedTime;
     }
 
-    private void calculateMerkleRoot() {
+    public void calculateMerkleRoot() {
         // merkle of one single transaction is the hash itself
         final int SHA256LENGTH = 32;
         byte[][] pendingHash = new byte[listTransactions.size()][SHA256LENGTH];
@@ -66,23 +66,59 @@ public class Block {
         }
         while(pendingHash.length > 1) {
             byte[][] calculated = new byte[(listTransactions.size() + 1) / 2][SHA256LENGTH];
+            
+            for(int i = 0; i < calculated.length; i++) {
+                byte[] s;
+                if(pendingHash.length > 2*i + 1) {
+                    s = new byte[2 * SHA256LENGTH];
+                    for(int k = 0; k < s.length; k++) {
+                        s[k] = pendingHash[];
+                        s[k + SHA256LENGTH] = pendingHash[j][k];
+                    }
+                }
+
+
+
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             int i = 0;
-            while(i < calculated.length - 1) {
+            while(i < calculated.length) {
                 int j = 0;
-                byte[] s = pendingHash[i++];
-                if(i < calculated.length) {
+                byte[] s = pendingHash[j++];
+                if(j < pendingHash.length - 1) {
                     //s = s + pendingHash[i];
                     byte[] s1 = new byte[2 * SHA256LENGTH];
                     for(int k = 0; k < s.length; k++) {
                         s1[k] = s[k];
-                        s1[k + SHA256LENGTH] = pendingHash[i][k];
+                        s1[k + SHA256LENGTH] = pendingHash[j][k];
                     }
                     s = s1;
                 }
                 i++;
                 try {
                     MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                    calculated[j] = digest.digest(s);
+                    calculated[i++] = digest.digest(s);
                 } catch(NoSuchAlgorithmException nsae) {
                     nsae.printStackTrace();
                     System.exit(1);
