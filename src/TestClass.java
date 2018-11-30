@@ -102,6 +102,36 @@ public class TestClass {
         System.out.println("merkle "+Block.hashToString(b.getMerkleRoot()));
 
 
+        byte[] m2 = new byte[t1.getTransactionHash().length + t2.getTransactionHash().length];
+        for(int i = 0; i < t1.getTransactionHash().length; i++) {
+            m2[i] = t1.getTransactionHash()[i];
+            m2[i+t1.getTransactionHash().length] = t2.getTransactionHash()[i];
+        }
+        byte[] merkle2 = null;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            merkle2 = digest.digest(m2);
+            System.out.println("Test merkle 2 " + Block.hashToString(merkle2));
+        }catch(NoSuchAlgorithmException nsae) {
+            nsae.printStackTrace();
+            System.exit(1);
+        }
+
+        byte[] m3 = new byte[merkle2.length + t3.getTransactionHash().length];
+        for(int i = 0; i < merkle2.length; i++) {
+            m3[i] = merkle2[i];
+            m3[i+merkle2.length] = t3.getTransactionHash()[i];
+        }
+        byte[] merkle3 = null;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            merkle3 = digest.digest(m3);
+            System.out.println("Test merkle 3 " + Block.hashToString(merkle3));
+        }catch(NoSuchAlgorithmException nsae) {
+            nsae.printStackTrace();
+            System.exit(1);
+        }
+
 
 
 

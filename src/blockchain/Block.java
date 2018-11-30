@@ -89,36 +89,8 @@ public class Block {
 
             }
 
-            //pendingHash = new byte[0][0];
             pendingHash = calculated;
 
-/*
-
-
-            int i = 0;
-            while(i < calculated.length) {
-                int j = 0;
-                byte[] s = pendingHash[j++];
-                if(j < pendingHash.length - 1) {
-                    //s = s + pendingHash[i];
-                    byte[] s1 = new byte[2 * SHA256LENGTH];
-                    for(int k = 0; k < s.length; k++) {
-                        s1[k] = s[k];
-                        s1[k + SHA256LENGTH] = pendingHash[j][k];
-                    }
-                    s = s1;
-                }
-                i++;
-                try {
-                    MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                    calculated[i++] = digest.digest(s);
-                } catch(NoSuchAlgorithmException nsae) {
-                    nsae.printStackTrace();
-                    System.exit(1);
-                }
-                j++;
-            }
-            pendingHash = calculated;*/
         }
         merkleRoot = pendingHash[0];
     }
