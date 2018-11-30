@@ -24,19 +24,21 @@ public class Transaction {
     private PublicKey keySrc;
     private PublicKey keyDst;
     private byte[] signature;
-    private String transactionHash;
+    private byte[] transactionHash;
     //private String hash;
 
     //solo a scopo di debug
-    public Transaction(){
+    /*public Transaction(){
         setCurrentTime();
         System.out.println(creationTime+"");
-    }
+    }*/
     
     public Transaction(Object payload, PublicKey keySrc, PublicKey keyDst) {
         this.payload = payload;
         this.keySrc = keySrc;
         this.keyDst = keyDst;
+        this.signature = null;
+        this.transactionHash = null;
         setCurrentTime();
     }
 
@@ -70,8 +72,9 @@ public class Transaction {
             */
             
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(s.getBytes("UTF-8"));
-            System.out.println("Lunghezza "+hash.length);
+            transactionHash = digest.digest(s.getBytes("UTF-8"));
+            
+            /*System.out.println("Lunghezza "+hash.length);
             StringBuffer hexString = new StringBuffer();
 
             for (int i = 0; i < hash.length; i++) {
@@ -80,28 +83,31 @@ public class Transaction {
               hexString.append(hex);
             }
 
-            transactionHash = hexString.toString();
-            
-        } catch(Exception nsae) {
+            //transactionHash = hexString.toString();
+            transactionHash = hash;*/
+
+        }catch(NoSuchAlgorithmException nsae){
             nsae.printStackTrace();
-            System.exit(1);
-        }
+        }catch(UnsupportedEncodingException uee){
+            uee.printStackTrace();
+        } 
     }
 
     public void sign(PrivateKey privateKey) {
         //imposto l'hash della transazione
         setHash();
 
-        byte output[] = new byte[0]; //conterrà l'hash finale crittografato con la mia chiave privata
+        //byte output[] = new byte[0]; //conterrà l'hash finale crittografato con la mia chiave privata
         try{
             Signature ecdsa = Signature.getInstance("SHA1WithRSA");
             ecdsa.initSign(privateKey);
             //trasfomro l'input in un flusso di byte
-            byte[] input = transactionHash.getBytes();
+            //byte[] input = transactionHash;
             //aggiorno nella signature i valori da essere criptati
-            ecdsa.update(input);
-            byte[] realSig = ecdsa.sign();
-            output = realSig; //in realsign è contenuto l'array di byte del messaggio cifrato con la chiave privata
+            ecdsa.update(transactionHash);
+            signature = ecdsa.sign();
+            //byte[] realSig = ecdsa.sign();
+            //output = realSig; //in realsign è contenuto l'array di byte del messaggio cifrato con la chiave privata
         }catch(NoSuchAlgorithmException nsae){
             nsae.printStackTrace();
         }catch(InvalidKeyException ike){
@@ -110,7 +116,7 @@ public class Transaction {
             se.printStackTrace();
         }
         //salvo il messaggio cifrato in string con codifica utf8
-        signature = output;
+        //signature = output;
                    
     }
 
@@ -120,7 +126,7 @@ public class Transaction {
         try {
 			Signature ecdsaVerify = Signature.getInstance("SHA1WithRSA");
 			ecdsaVerify.initVerify(keySrc);
-			ecdsaVerify.update(transactionHash.getBytes());
+			ecdsaVerify.update(transactionHash);
 			verified = ecdsaVerify.verify(signature);
 		}catch(NoSuchAlgorithmException nsae){
             nsae.printStackTrace();
@@ -133,10 +139,8 @@ public class Transaction {
     }
 
     
-    public String getTransactionHash(){
-        
+    public byte[] getTransactionHash(){       
         return transactionHash;
-
     }
 
 
