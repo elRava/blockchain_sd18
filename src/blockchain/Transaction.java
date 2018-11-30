@@ -61,10 +61,28 @@ public class Transaction {
         String keyDestString = Base64.getEncoder().encodeToString(keyDst.getEncoded());
         String keySrcString = Base64.getEncoder().encodeToString(keySrc.getEncoded());
         String s = creationTime.toString()+payload.toString()+keyDestString+keySrcString;
+        System.out.println("Stringa da hashare "+s);
         try {
+            /*
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            transactionHash = new String(digest.digest(s.getBytes(StandardCharsets.UTF_8)));
-        } catch(NoSuchAlgorithmException nsae) {
+            byte[] hash = digest.digest(s.getBytes("UTF-8"));
+            transactionHash = Base64.getEncoder().encodeToString(hash);
+            */
+            
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(s.getBytes("UTF-8"));
+            System.out.println("Lunghezza "+hash.length);
+            StringBuffer hexString = new StringBuffer();
+
+            for (int i = 0; i < hash.length; i++) {
+              String hex = Integer.toHexString(0xff & hash[i]);
+              if(hex.length() == 1) hexString.append('0');
+              hexString.append(hex);
+            }
+
+            transactionHash = hexString.toString();
+            
+        } catch(Exception nsae) {
             nsae.printStackTrace();
             System.exit(1);
         }
@@ -97,6 +115,7 @@ public class Transaction {
     }
 
     public boolean verify() {
+        setHash();
         boolean verified = false;
         try {
 			Signature ecdsaVerify = Signature.getInstance("SHA1WithRSA");
