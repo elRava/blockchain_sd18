@@ -13,10 +13,10 @@ public class Block {
     public static final int LIST_LENGTH = 4;
 
     private List<Transaction> listTransactions;
-    private String previousHash;
-    private String hash;
+    private byte[] previousHash;
+    private byte[] hash;
     private long nonce;
-    private String merkleRoot;
+    private byte[] merkleRoot;
     private AtomicLong tempNonce;
     private Timestamp minedTime;
     private boolean isMining;
@@ -32,19 +32,19 @@ public class Block {
         isMining = false;
     }
 
-    public void setPreviousHash(String previousHash) {
+    public void setPreviousHash(byte[] previousHash) {
         this.previousHash = previousHash;
     }
 
-    public String getPreviousHash() {
+    public byte[] getPreviousHash() {
         return previousHash;
     }
 
-    public String getHash() {
+    public byte[] getHash() {
         return hash;
     }
 
-    public String getMerkleRoot() {
+    public byte[] getMerkleRoot() {
         return merkleRoot;
     }
 
@@ -58,7 +58,8 @@ public class Block {
 
     private void calculateMerkleRoot() {
         // merkle of one single transaction is the hash itself
-        String[] pendingHash = new String[listTransactions.size()];
+        final int SHA256LENGTH = 32;
+        byte[][] pendingHash = new byte[listTransactions.size()][SHA256LENGTH];
         for(int i = 0; i < pendingHash.length; i++) {
             pendingHash[i] = listTransactions.get(i).getTransactionHash();
         }

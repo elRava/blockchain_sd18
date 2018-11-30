@@ -3,11 +3,26 @@ import java.security.*;
 import java.util.*;
 
 import blockchain.Transaction;
+import java.sql.Timestamp;
+import java.net.InetAddress;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.io.UnsupportedEncodingException;
+import java.net.*;
+import java.util.*;
+import java.security.MessageDigest;
+import java.nio.charset.*;
 
 public class TestClass {
 
 
     public static void main(String[] args) {
+        /*
         //Transaction t = new Transaction();
         PublicKey pubAlice = null;
         PrivateKey priAlice = null;
@@ -30,7 +45,7 @@ public class TestClass {
         /*KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(1024);
         keyPair kpAlice = kpg.genKeyPair();
-*/
+
         System.out.println("Chiave public Alice is "+convPubintoStringAlice);
         System.out.println("Chiave private Alice is "+convPriintoStringAlice);
 
@@ -57,8 +72,15 @@ public class TestClass {
         Transaction t = new Transaction(5, pubAlice, pubBob);
         t.sign(priBob);
         System.out.println("Corretta? "+t.verify());
+*/
+        try {
+            String s = "ciao";
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] a = digest.digest(s.getBytes());
+            System.out.println(new String(a, "UTF-8"));
+        } catch(Exception e) {
 
-
+        }
 
     }
 

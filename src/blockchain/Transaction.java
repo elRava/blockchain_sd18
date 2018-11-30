@@ -24,7 +24,7 @@ public class Transaction {
     private PublicKey keySrc;
     private PublicKey keyDst;
     private byte[] signature;
-    private String transactionHash;
+    private byte[] transactionHash;
     //private String hash;
 
     //solo a scopo di debug
@@ -114,7 +114,7 @@ public class Transaction {
     }
 
     
-    public String getTransactionHash(){
+    public byte[] getTransactionHash(){
         
         return transactionHash;
 
