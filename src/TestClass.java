@@ -43,12 +43,12 @@ public class TestClass {
         String convPubintoStringAlice = Base64.getEncoder().encodeToString(pubAlice.getEncoded());
         String convPriintoStringAlice = Base64.getEncoder().encodeToString(priAlice.getEncoded());
         
-        /*KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-        kpg.initialize(1024);
-        keyPair kpAlice = kpg.genKeyPair();
+        //KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        //kpg.initialize(1024);
+        //KeyPair kpAlice = kpg.genKeyPair();
         System.out.println("Chiave public Alice is "+convPubintoStringAlice);
         System.out.println("Chiave private Alice is "+convPriintoStringAlice);
-*/
+
         PublicKey pubBob = null;
         PrivateKey priBob = null;
         
@@ -65,31 +65,45 @@ public class TestClass {
 
         String convPubintoStringBob = Base64.getEncoder().encodeToString(pubBob.getEncoded());
         String convPriintoStringBob = Base64.getEncoder().encodeToString(priBob.getEncoded());
-        /*
+        
         System.out.println("Chiave public Bob is "+convPubintoStringBob);
         System.out.println("Chiave private Bob is "+convPriintoStringBob);
-        */
+   
+
+
+
+
+        Block b = new Block();
+
+
+
         Transaction t1 = new Transaction(5, pubAlice, pubBob);
         t1.sign(priAlice);
-        System.out.println("Corretta? "+t1.verify());
+        b.addTransaction(t1);
+        //System.out.println("Corretta? "+t1.verify());
         System.out.println("HASH t1 "+Block.hashToString(t1.getTransactionHash()));
+        b.calculateMerkleRoot();
+        System.out.println("merkle "+Block.hashToString(b.getMerkleRoot()));
 
         Transaction t2 = new Transaction(15, pubAlice, pubBob);
         t2.sign(priAlice);
-        System.out.println("Corretta? "+t2.verify());
-        
-        System.out.println("HASH t2 "+Block.hashToString(t2.getTransactionHash()));
-        String con = Block.hashToString(t1.getTransactionHash()) + Block.hashToString(t2.getTransactionHash());
-        System.out.println("Stringa merkle root "+con);
-        Block b = new Block();
-        b.addTransaction(t1);
-        b.calculateMerkleRoot();
-        //b.getMerkleRoot();
-        System.out.println("Merkle con solo una transazione is "+Block.hashToString(b.getMerkleRoot()));
         b.addTransaction(t2);
+        //System.out.println("Corretta? "+t1.verify());
+        System.out.println("HASH t2 "+Block.hashToString(t2.getTransactionHash()));
         b.calculateMerkleRoot();
-        System.out.println("Aggiunta t2");
-        System.out.println("Merkle con due transazioni is "+Block.hashToString(b.getMerkleRoot()));
+        System.out.println("merkle "+Block.hashToString(b.getMerkleRoot()));
+
+        Transaction t3 = new Transaction(25, pubAlice, pubBob);
+        t3.sign(priAlice);
+        b.addTransaction(t3);
+        //System.out.println("Corretta? "+t1.verify());
+        System.out.println("HASH t3 "+Block.hashToString(t3.getTransactionHash()));
+        b.calculateMerkleRoot();
+        System.out.println("merkle "+Block.hashToString(b.getMerkleRoot()));
+
+
+
+
 
     }
 

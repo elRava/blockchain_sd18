@@ -65,41 +65,34 @@ public class Block {
             pendingHash[i] = listTransactions.get(i).getTransactionHash();
         }
         while(pendingHash.length > 1) {
-            byte[][] calculated = new byte[(listTransactions.size() + 1) / 2][SHA256LENGTH];
+            byte[][] calculated = new byte[(pendingHash.length + 1) / 2][SHA256LENGTH];
             
             for(int i = 0; i < calculated.length; i++) {
-                byte[] s;
-                if(pendingHash.length > 2*i + 1) {
-                    s = new byte[2 * SHA256LENGTH];
-                    for(int k = 0; k < s.length; k++) {
-                        s[k] = pendingHash[];
-                        s[k + SHA256LENGTH] = pendingHash[j][k];
+
+                if(2*i + 1 < pendingHash.length) {
+                    byte[] s = new byte[2 * SHA256LENGTH];
+                    for(int k = 0; k < SHA256LENGTH; k++) {
+                        s[k] = pendingHash[2*i][k];
+                        s[k + SHA256LENGTH] = pendingHash[2*i+1][k];
                     }
+                    try {
+                        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                        calculated[i] = digest.digest(s);
+                    }catch(NoSuchAlgorithmException nsae) {
+                        nsae.printStackTrace();
+                        System.exit(1);
+                    }
+                } else {
+                    calculated[i] = pendingHash[2*i];
                 }
-
-
+                
 
             }
 
+            //pendingHash = new byte[0][0];
+            pendingHash = calculated;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*
 
 
             int i = 0;
@@ -125,7 +118,7 @@ public class Block {
                 }
                 j++;
             }
-            pendingHash = calculated;
+            pendingHash = calculated;*/
         }
         merkleRoot = pendingHash[0];
     }
