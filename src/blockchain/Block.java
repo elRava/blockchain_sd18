@@ -47,6 +47,19 @@ public class Block {
     }
 
     /**
+     * Create the genesis block
+     * @return the genesis block
+     */
+    public Block genesisBlock() {
+        Block b = new Block();
+        b.hash = new String("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f").getBytes();
+        b.isMined = new AtomicBoolean().set(true);
+        b.listTransactions = new ArrayList<>();
+        b.previousHash = null;
+        return b;
+    }
+
+    /**
      * Set the hash of the previous block in the blockchain on block information
      * @param previousHash the hash of the previous block
      */
@@ -108,11 +121,14 @@ public class Block {
      * take two by two and calculate the hash of the concatenation of the hashes
      * then repeat the same on the list of the hashes, and so on
      */
-    public void calculateMerkleRoot() {
+    public static byte[] calculateMerkleRoot(List<Transaction> listTransactions) {
         // merkle of one single transaction is the hash itself
         // use tho lists: one of the hashes that have to be grouped
         // the other of the hashes that have been calculated
         // then let the second be the first and iterate until the list has only one element
+        if(listTransactions.isEmpty) {
+            throw new NoSuchElementException();
+        }
         final int SHA256LENGTH = 32;
         byte[][] pendingHash = new byte[listTransactions.size()][SHA256LENGTH];
         for(int i = 0; i < pendingHash.length; i++) {
@@ -146,7 +162,7 @@ public class Block {
             pendingHash = calculated;
 
         }
-        merkleRoot = pendingHash[0];
+        return pendingHash[0];
     }
 
     /**
@@ -230,7 +246,7 @@ public class Block {
         // se abbiamo tempo evoglia dire quanti thread dedicare
         // crea thread che mina. se numero di transazioni aumenta ricomincia
         isMining = true;
-        calculateMerkleRoot();
+        merkleRoot = calculateMerkleRoot(listTransactions);
 
         MinerThread mt = new MinerThread(difficulty);
         for(int i = 0; i < numThread; i++) {
