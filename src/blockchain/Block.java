@@ -53,7 +53,8 @@ public class Block {
     public Block genesisBlock() {
         Block b = new Block();
         b.hash = new String("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f").getBytes();
-        b.isMined = new AtomicBoolean().set(true);
+        b.isMined = new AtomicBoolean();
+        b.isMined.set(true);
         b.listTransactions = new ArrayList<>();
         b.previousHash = null;
         return b;
@@ -126,7 +127,7 @@ public class Block {
         // use tho lists: one of the hashes that have to be grouped
         // the other of the hashes that have been calculated
         // then let the second be the first and iterate until the list has only one element
-        if(listTransactions.isEmpty) {
+        if(listTransactions.isEmpty()) {
             throw new NoSuchElementException();
         }
         final int SHA256LENGTH = 32;

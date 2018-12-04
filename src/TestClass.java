@@ -75,7 +75,7 @@ public class TestClass {
 
         Block b = new Block();
 
-
+/*
 
         Transaction t1 = new Transaction(5, pubAlice, pubBob);
         t1.sign(priAlice);
