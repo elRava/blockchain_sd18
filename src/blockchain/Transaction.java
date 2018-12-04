@@ -25,13 +25,7 @@ public class Transaction {
     private PublicKey keyDst;
     private byte[] signature;
     private byte[] transactionHash;
-    //private String hash;
-
-    //solo a scopo di debug
-    /*public Transaction(){
-        setCurrentTime();
-        System.out.println(creationTime+"");
-    }*/
+ 
     
     public Transaction(Object payload, PublicKey keySrc, PublicKey keyDst) {
         this.payload = payload;
@@ -63,28 +57,11 @@ public class Transaction {
         String keyDestString = Base64.getEncoder().encodeToString(keyDst.getEncoded());
         String keySrcString = Base64.getEncoder().encodeToString(keySrc.getEncoded());
         String s = creationTime.toString()+payload.toString()+keyDestString+keySrcString;
-        //System.out.println("Stringa da hashare "+s);
-        try {
-            /*
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(s.getBytes("UTF-8"));
-            transactionHash = Base64.getEncoder().encodeToString(hash);
-            */
-            
+        try {           
+           
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             transactionHash = digest.digest(s.getBytes("UTF-8"));
-            
-            /*System.out.println("Lunghezza "+hash.length);
-            StringBuffer hexString = new StringBuffer();
-
-            for (int i = 0; i < hash.length; i++) {
-              String hex = Integer.toHexString(0xff & hash[i]);
-              if(hex.length() == 1) hexString.append('0');
-              hexString.append(hex);
-            }
-
-            //transactionHash = hexString.toString();
-            transactionHash = hash;*/
+           
 
         }catch(NoSuchAlgorithmException nsae){
             nsae.printStackTrace();
@@ -115,8 +92,6 @@ public class Transaction {
         }catch(SignatureException se){
             se.printStackTrace();
         }
-        //salvo il messaggio cifrato in string con codifica utf8
-        //signature = output;
                    
     }
 
