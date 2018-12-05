@@ -101,9 +101,9 @@ public class RegistryApplication {
                 }
                 // half an hour
                 System.out.println("Cleaning the registry");
-                int before = reg.getIPSet().size();
+                int before = reg.reg.size();
                 reg.clean(1000*30);
-                int after = reg.getIPSet().size();
+                int after = reg.reg.size();
                 System.out.println("Registry cleaned. Removed " + (before - after) + " elements");
                 
             }
