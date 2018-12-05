@@ -165,7 +165,7 @@ import blockchain.Transaction;24);
         RegistryInterface r = null;
 
         try {
-            r = (RegistryInterface) Naming.lookup("//localhost:7867/registry");
+            r = (RegistryInterface) Naming.lookup("//" + args[0] + "/registry");
         } catch(Exception re) {
             re.printStackTrace();
             System.exit(1);

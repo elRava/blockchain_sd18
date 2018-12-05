@@ -4,7 +4,9 @@ import java.rmi.*;
 import java.rmi.registry.*;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.io.*;
 import java.util.Date;
 import java.lang.reflect.MalformedParametersException;
@@ -46,6 +48,8 @@ public class RegistryApplication {
             LocateRegistry.createRegistry(port);
             reg = new Registry();
             Naming.bind("//localhost:" + port + "/registry", reg);
+            //System.setProperty("java.rmi.server.hostname", "192.168.1.224");
+            //System.out.println("......." + InetAddress.getLocalHost().getHostAddress());
             System.out.println("Registry bound at //localhost:" + port + "/registry");
             if(fromBackup) {
                 System.out.println("Restoring registry from backup");
@@ -60,6 +64,9 @@ public class RegistryApplication {
             System.exit(1);
         } catch(MalformedURLException mue) {
             mue.printStackTrace();
+            System.exit(1);
+        } catch(UnknownHostException uhe) {
+            uhe.printStackTrace();
             System.exit(1);
         }
 
