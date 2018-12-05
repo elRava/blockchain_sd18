@@ -133,7 +133,11 @@ public class Block {
         final int SHA256LENGTH = 32;
         byte[][] pendingHash = new byte[listTransactions.size()][SHA256LENGTH];
         for(int i = 0; i < pendingHash.length; i++) {
+            //Transaction temp = (Transaction)listTransactions.get(i);
             pendingHash[i] = listTransactions.get(i).getTransactionHash();
+            //String s = temp.getTransactionHash();
+            //System.out.println("PD "+s);
+            //pendingHash[i] = temp.tranByte();
         }
         while(pendingHash.length > 1) {
             byte[][] calculated = new byte[(pendingHash.length + 1) / 2][SHA256LENGTH];

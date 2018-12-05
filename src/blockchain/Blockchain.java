@@ -8,7 +8,7 @@ import java.util.*;
 public class Blockchain {
 
     //Ring first;
-    Ring last;
+    private Ring last;
 
 
     public Blockchain() {
