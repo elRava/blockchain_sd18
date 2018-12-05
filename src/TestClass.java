@@ -1,11 +1,8 @@
-
+import registry.*;
 import java.security.*;
 import java.util.*;
-
-import blockchain.Block;
-import blockchain.Transaction;
+import blockchain.*;
 import java.sql.Timestamp;
-import java.net.InetAddress;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -13,17 +10,22 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.security.MessageDigest;
 import java.nio.charset.*;
+import java.rmi.*;
 
 public class TestClass {
 
 
     public static void main(String[] args) {
-        
+        /*    
         //Transaction t = new Transaction();
         PublicKey pubAlice = null;
         PrivateKey priAlice = null;
@@ -55,7 +57,8 @@ public class TestClass {
         try{
             KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
             //Inizializzo il key generator
-            keygen.initialize(1024);
+            keygen.initialize(10
+import blockchain.Transaction;24);
             KeyPair kp = keygen.genKeyPair();
             pubBob = kp.getPublic();
             priBob = kp.getPrivate();
@@ -139,7 +142,7 @@ public class TestClass {
             nsae.printStackTrace();
             System.exit(1);
         }
-*/
+
 
         b.setPreviousHash(t1.getTransactionHash());
 
@@ -157,11 +160,47 @@ public class TestClass {
 
 
         System.out.println("Verify hash " + Block.hashToString(b.calculateHash(b.getPreviousHash(), b.getMerkleRoot(), b.getNonce())));
+        */
+
+        RegistryInterface r = null;
+
+        try {
+            r = (RegistryInterface) Naming.lookup("//localhost:7867/registry");
+        } catch(Exception re) {
+            re.printStackTrace();
+            System.exit(1);
+        }
+
+
+        BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+
+
+        while(true) {
+            String line = null;
+            try {
+                while((line = bf.readLine()) != null) {
+                    try {
+                        r.register(new InetSocketAddress(line, 1234));
+                        ArrayList<InetSocketAddress> l = r.getIPSet();
+                        for (InetSocketAddress a : l) {
+                            System.out.println("... " + a.getHostName());
+                        }
+                    } catch(RemoteException re) {
+                        re.printStackTrace();
+                        System.exit(1);
+                    }
+                }
+            } catch(IOException ioe) {
+                ioe.printStackTrace();
+                System.exit(1);
+            }
+            
+
+        }
+
+
 
 
     }
-
-    
-    
 
 }
