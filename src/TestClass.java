@@ -3,6 +3,7 @@ import java.security.*;
 import java.util.*;
 
 import blockchain.Block;
+import blockchain.Blockchain;
 import blockchain.Transaction;
 import java.sql.Timestamp;
 import java.net.InetAddress;
@@ -71,20 +72,22 @@ public class TestClass {
    
 
 
-
+        Blockchain chain = new Blockchain();
 
         Block b = new Block();
+        b.setPreviousHash(chain.lastBlock().getHash());
 
-/*
+
 
         Transaction t1 = new Transaction(5, pubAlice, pubBob);
         t1.sign(priAlice);
         b.addTransaction(t1);
         //System.out.println("Corretta? "+t1.verify());
         System.out.println("HASH t1 "+Block.hashToString(t1.getTransactionHash()));
-        b.calculateMerkleRoot();
-        System.out.println("merkle "+Block.hashToString(b.getMerkleRoot()));
-
+        //b.calculateMerkleRoot();
+        //Block.calculateMerkleRoot(listTransactions)
+        //System.out.println("merkle "+Block.hashToString(b.getMerkleRoot()));
+/*
         Transaction t2 = new Transaction(15, pubAlice, pubBob);
         t2.sign(priAlice);
         b.addTransaction(t2);
@@ -144,20 +147,25 @@ public class TestClass {
         b.setPreviousHash(t1.getTransactionHash());
 
         System.out.println("prev " + Block.hashToString(b.getPreviousHash()));
-        System.out.println("merk " + Block.hashToString(b.getMerkleRoot()));
+        //System.out.println("merk " + Block.hashToString(b.getMerkleRoot()));
         //System.out.println("prev " + Block.hashToString(b.getPreviousHash()));
 
 
         long begin = System.currentTimeMillis();
-        b.mineBlock(5, 3);
+        b.mineBlock(4, 3);
         long end = System.currentTimeMillis();
 
         System.out.println("Block hash " + Block.hashToString(b.getHash()));
-        System.out.println("Mining Time " + (end-begin));
+        System.out.println("Mining Time " + (end-begin) + "ms");
 
 
         System.out.println("Verify hash " + Block.hashToString(b.calculateHash(b.getPreviousHash(), b.getMerkleRoot(), b.getNonce())));
 
+        
+
+
+
+        
 
     }
 

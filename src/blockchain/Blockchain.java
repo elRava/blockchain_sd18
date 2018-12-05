@@ -27,13 +27,18 @@ public class Blockchain {
         boolean isAdd = false;
         Ring current = last;
         //finisce se lo trova, oppure se sono arrivato alla cima senza un nodo valido corrispondente
-        while(!isAdd && current!=null){           
+        while(!isAdd && current!=null){    
+            System.out.println("Analisi corrente:");
+            System.out.println("Hash target da inserire: "+Block.hashToString(target));
+            System.out.println("Corrente hash da valutare: "+Block.hashToString(current.block.getHash()));       
             if(!Arrays.equals(target,current.block.getHash())){ // non è giusto attaccarlo a last
+                System.out.println("Cerco nei siblings");
                 List<Ring> sibling = last.getSiblings();
                 for(int i=0; i<sibling.size() && !isAdd; i++){
                     isAdd = isAdd || DFS(block,sibling.get(i));
                 }
             }else{
+                System.out.println("Proprio quello giusto");
                 //si attacca alla radice
                 Ring ring = new Ring(block);
                 ring.setFather(current);
@@ -72,6 +77,10 @@ public class Blockchain {
         //se non ha figli e il nodo corrisondente non corrisponde e non c'è nel sottoalbero allora è false
         //se è presente nel sottoalbero allora è true
         return false || isAdd;          
+    }
+
+    public Block lastBlock(){
+        return last.block;
     }
 
     private Iterator<Block> getIterator() {
