@@ -33,7 +33,8 @@ public class Blockchain {
             System.out.println("Corrente hash da valutare: "+Block.hashToString(current.block.getHash()));       
             if(!Arrays.equals(target,current.block.getHash())){ // non è giusto attaccarlo a last
                 System.out.println("Cerco nei siblings");
-                List<Ring> sibling = last.getSiblings();
+                List<Ring> sibling = current.getSiblings();
+                System.out.println("Siblings sono "+sibling.size());
                 for(int i=0; i<sibling.size() && !isAdd; i++){
                     isAdd = isAdd || DFS(block,sibling.get(i));
                 }
@@ -41,15 +42,22 @@ public class Blockchain {
                 System.out.println("Proprio quello giusto");
                 //si attacca alla radice
                 Ring ring = new Ring(block);
-                ring.setFather(current);
+                //current.addSon(ring);
+                //System.out.println("current "+current)
+
+                //ring.setFather(current);
+                current.addSon(ring);
+
                 //mantengo la consistenza con last
                 if(ring.depth>=last.depth){
                     this.last = ring;
                 }
                 isAdd = true;  
+                System.out.println("Blocco corrente con hash "+Block.hashToString(ring.block.getHash())+" appena inserito ha "+ring.sons.size()+" figli");
             }
             current = current.father;           
         }    
+        
         return isAdd;
          
     }
@@ -58,16 +66,24 @@ public class Blockchain {
         //provo ad attaccarla come un altro figlio del root
         byte[] target = block.getPreviousHash();
         boolean isAdd = false;
+        System.out.println("Analisi corrente:");
+        System.out.println("Hash target da inserire: "+Block.hashToString(target));
+        System.out.println("Corrente hash da valutare: "+Block.hashToString(root.block.getHash()));  
         if(!Arrays.equals(target,root.block.getHash())){
+            System.out.println("Entro nel if");
             List<Ring> sons = root.sons;     
             //appena mi ritorna true un sottoramo esco dalla ricerca
             for(int i=0; i<sons.size() && !isAdd; i++){
                 isAdd = isAdd || DFS(block,sons.get(i));
             }
         }else{
+            System.out.println("Match");
             //il nodo corrispondente corrisponde
             Ring ring = new Ring(block);
-            ring.setFather(root);
+           
+            //ring.setFather(root);
+            root.addSon(ring);
+           
             //mantengo la consistenza con last
             if(ring.depth>=last.depth){
                 this.last = ring;
@@ -83,7 +99,7 @@ public class Blockchain {
         return last.block;
     }
 
-    private Iterator<Block> getIterator() {
+    public Iterator<Block> getIterator() {
         return new BlockchainIterator();
     }
 
@@ -103,9 +119,9 @@ public class Blockchain {
     
         @Override
         public Block next() {
-            Block next = last.block;
+            Block next = cursor.block;
             //scorre al successivo
-            cursor = last.father;
+            cursor = cursor.father;
             return next;
         }
            
@@ -122,7 +138,7 @@ public class Blockchain {
 
         private Ring(Block block) {
             this.block = block;
-            List<Ring> sons = new LinkedList<Ring>();
+            sons = new LinkedList<Ring>();
             //se non gli imposto il padre successivamente è un blocco che punta all'origine
             // viene utilizzato solo per il GenesisBlock
             father = null;
@@ -131,16 +147,37 @@ public class Blockchain {
 
         //metodo unico per fare il setFather per il figlio e automaticamente aggiunge il figlio alla lista del padre 
         private void setFather(Ring ring){
+            /*System.out.println("Numero figli padre alla chiamata del metodo "+ring)
             this.father = ring;
             ring.sons.add(this);
-            this.depth = ring.depth+1;
+            this.depth = ring.depth+1;*/
+        }
+
+        private void addSon(Ring ring){
+            System.out.println("Padre "+Block.hashToString(this.block.getHash())+" prima della chiamata del metodo ha "+sons.size()+" figli");
+            for(int i=0;i<sons.size();i++){               
+                System.out.println("Figlio "+i+" ha hash "+Block.hashToString(sons.get(i).block.getHash()));
+            }
+            sons.add(ring);
+            ring.father = this;
+            ring.depth = depth +1;
+            //System.out.println("Padre dopo la chiamata del metodo ha "+sons.size()+" figli");
+            System.out.println("Padre "+Block.hashToString(this.block.getHash())+" ha "+sons.size()+" figli");
+            for(int i=0;i<sons.size();i++){               
+                System.out.println("Figlio "+i+" ha hash "+Block.hashToString(sons.get(i).block.getHash()));
+            }
         }
 
 
         private List<Ring> getSiblings(){
             List<Ring> siblings = new LinkedList<Ring>();
+            byte[] currentHash = this.block.getHash();
+            System.out.println("Il padre con hash "+Block.hashToString(this.father.block.getHash())+" ha "+this.father.sons.size()+" figli");
             for(Ring r : this.father.sons){
-                if(r!=this){//da controllare se funziona o specificare meglio il "diverso da"
+                byte[] tempHash = r.block.getHash();
+
+
+                if(tempHash!=currentHash){//da controllare se funziona o specificare meglio il "diverso da"
                     siblings.add(r);
                 }
             }
