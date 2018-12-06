@@ -19,7 +19,7 @@ public class Blockchain {
     }
 
     private Iterator<Block> getIterator() {
-        return new BlockchainIterator();
+        return null;
     }
 
 
