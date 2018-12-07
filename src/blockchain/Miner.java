@@ -5,6 +5,10 @@ import java.util.List;
 
 public class Miner implements MinerInterface {
 
+    private Blockchain blockchain;
+
+    private Lis
+
     public Miner() {
 
     }
@@ -13,7 +17,7 @@ public class Miner implements MinerInterface {
         return null;
     }
 
-    public boolean sendTransaction(Transaction transaction) throws RemoteException {
+    public void sendTransaction(Transaction transaction) throws RemoteException {
         return true;
     }
 
