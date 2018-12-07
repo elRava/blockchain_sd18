@@ -21,7 +21,7 @@ import java.security.MessageDigest;
 import java.nio.charset.*;
 import java.rmi.*;
 
-public class TestClass {
+public class TestClassBlockchain {
 
 
     public static void main(String[] args) {
@@ -45,12 +45,7 @@ public class TestClass {
         String convPubintoStringAlice = Base64.getEncoder().encodeToString(pubAlice.getEncoded());
         String convPriintoStringAlice = Base64.getEncoder().encodeToString(priAlice.getEncoded());
         
-        //KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-        //kpg.initialize(1024);
-        //KeyPair kpAlice = kpg.genKeyPair();
-        /*System.out.println("Chiave public Alice is "+convPubintoStringAlice);
-        System.out.println("Chiave private Alice is "+convPriintoStringAlice);
-        */
+
         System.out.println("Chiavi di Alice generate");
 
         PublicKey pubBob = null;
@@ -91,84 +86,10 @@ public class TestClass {
         b1.addTransaction(t1);
         //System.out.println("Corretta? "+t1.verify());
         System.out.println("HASH t1 "+Block.hashToString(t1.getTransactionHash()));
-        //b.calculateMerkleRoot();
-        //Block.calculateMerkleRoot(listTransactions)
-        //System.out.println("merkle "+Block.hashToString(b.getMerkleRoot()));
-/*
-        Transaction t2 = new Transaction(15, pubAlice, pubBob);
-        t2.sign(priAlice);
-        b.addTransaction(t2);
-        //System.out.println("Corretta? "+t1.verify());
-        System.out.println("HASH t2 "+Block.hashToString(t2.getTransactionHash()));
-        b.calculateMerkleRoot();
-        System.out.println("merkle "+Block.hashToString(b.getMerkleRoot()));
-
-        Transaction t3 = new Transaction(25, pubAlice, pubBob);
-        t3.sign(priAlice);
-        b.addTransaction(t3);
-        //System.out.println("Corretta? "+t1.verify());
-        System.out.println("HASH t3 "+Block.hashToString(t3.getTransactionHash()));
-        b.calculateMerkleRoot();
-        System.out.println("merkle "+Block.hashToString(b.getMerkleRoot()));
-
-        Transaction t4 = new Transaction(35, pubAlice, pubBob);
-        t4.sign(priAlice);
-        b.addTransaction(t4);
-        //System.out.println("Corretta? "+t1.verify());
-        System.out.println("HASH t4 "+Block.hashToString(t4.getTransactionHash()));
-        b.calculateMerkleRoot();
-        System.out.println("merkle "+Block.hashToString(b.getMerkleRoot()));
-
-/*
-        byte[] m2 = new byte[t1.getTransactionHash().length + t2.getTransactionHash().length];
-        for(int i = 0; i < t1.getTransactionHash().length; i++) {
-            m2[i] = t1.getTransactionHash()[i];
-            m2[i+t1.getTransactionHash().length] = t2.getTransactionHash()[i];
-        }
-        byte[] merkle2 = null;
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            merkle2 = digest.digest(m2);
-            System.out.println("Test merkle 2 " + Block.hashToString(merkle2));
-        }catch(NoSuchAlgorithmException nsae) {
-            nsae.printStackTrace();
-            System.exit(1);
-        }
-
-        byte[] m3 = new byte[merkle2.length + t3.getTransactionHash().length];
-        for(int i = 0; i < merkle2.length; i++) {
-            m3[i] = merkle2[i];
-            m3[i+merkle2.length] = t3.getTransactionHash()[i];
-        }
-        byte[] merkle3 = null;
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            merkle3 = digest.digest(m3);
-            System.out.println("Test merkle 3 " + Block.hashToString(merkle3));
-        }catch(NoSuchAlgorithmException nsae) {
-            nsae.printStackTrace();
-            System.exit(1);
-        }
-
-
-        b.setPreviousHash(t1.getTransactionHash());
-
-        System.out.println("prev " + Block.hashToString(b.getPreviousHash()));
-        //System.out.println("merk " + Block.hashToString(b.getMerkleRoot()));
-        //System.out.println("prev " + Block.hashToString(b.getPreviousHash()));
-        */
-        //b.setPreviousHash();
-
-        //long begin = System.currentTimeMillis();
+      
         
         b1.mineBlock(3, 3);
-        //long end = System.currentTimeMillis();
-
-        //System.out.println("Block hash " + Block.hashToString(b.getHash()));
-        //System.out.println("Mining Time " + (end-begin) + "ms");
-
-
-        //System.out.println("Verify hash " + Block.hashToString(b.calculateHash(b.getPreviousHash(), b.getMerkleRoot(), b.getNonce())));
+       
         byte[] hashb1 = b1.getHash();
         System.out.println("Blocco b1 ha hash: "+Block.hashToString(hashb1));
 
@@ -344,47 +265,6 @@ public class TestClass {
             i++;
         }
 
-
-
-        /*
-
-
-        
-
-        try {
-            r = (RegistryInterface) Naming.lookup("//localhost:7867/registry");
-        } catch(Exception re) {
-            re.printStackTrace();
-            System.exit(1);
-        }
-
-
-        BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-
-
-        while(true) {
-            String line = null;
-            try {
-                while((line = bf.readLine()) != null) {
-                    try {
-                        r.register(new InetSocketAddress(line, 1234));
-                        ArrayList<InetSocketAddress> l = r.getIPSet();
-                        for (InetSocketAddress a : l) {
-                            System.out.println("... " + a.getHostName());
-                        }
-                    } catch(RemoteException re) {
-                        re.printStackTrace();
-                        System.exit(1);
-                    }
-                }
-            } catch(IOException ioe) {
-                ioe.printStackTrace();
-                System.exit(1);
-            }
-            
-
-        }
-        */
 
 
 
