@@ -52,7 +52,7 @@ public class Block {
      */
     public Block genesisBlock() {
         Block b = new Block();
-        b.hash = new String("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f").getBytes();
+        b.hash = hexStringToByteArray("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");   
         b.isMined = new AtomicBoolean();
         b.isMined.set(true);
         b.listTransactions = new ArrayList<>();
@@ -133,7 +133,11 @@ public class Block {
         final int SHA256LENGTH = 32;
         byte[][] pendingHash = new byte[listTransactions.size()][SHA256LENGTH];
         for(int i = 0; i < pendingHash.length; i++) {
+            //Transaction temp = (Transaction)listTransactions.get(i);
             pendingHash[i] = listTransactions.get(i).getTransactionHash();
+            //String s = temp.getTransactionHash();
+            //System.out.println("PD "+s);
+            //pendingHash[i] = temp.tranByte();
         }
         while(pendingHash.length > 1) {
             byte[][] calculated = new byte[(pendingHash.length + 1) / 2][SHA256LENGTH];
@@ -300,6 +304,20 @@ public class Block {
         return hexString.toString();
     }
 
+    /**
+     * Utility method to get a byte array from a hex string
+     * @param s hex string
+     * @return hex string in byte array format
+     */ 
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                                 + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
+    }
 
     /**
      * Class that implements a thread that mines a block.
@@ -342,7 +360,7 @@ public class Block {
 
                 // calculate hash
                 byte[] tempHash = calculateHash(previousHash, merkleRoot, nonceCopy);
-                System.out.println(Thread.currentThread().getName() + "   nonce " + nonceCopy + "   " + hashToString(tempHash));
+                //System.out.println(Thread.currentThread().getName() + "   nonce " + nonceCopy + "   " + hashToString(tempHash));
 
                 // verify correctness
                 if(! verifyHash(tempHash, difficulty)) {

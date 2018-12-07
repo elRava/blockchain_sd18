@@ -25,14 +25,13 @@ public class Transaction {
     private PublicKey keyDst;
     private byte[] signature;
     private byte[] transactionHash;
-    //private String hash;
-
-    //solo a scopo di debug
-    /*public Transaction(){
-        setCurrentTime();
-        System.out.println(creationTime+"");
-    }*/
-    
+ 
+    /**
+     * Constructor of the transaction
+     * @param paylod content of the transaction
+     * @param keySrc public key of the source
+     * @param keyDst public key of the destination
+     */
     public Transaction(Object payload, PublicKey keySrc, PublicKey keyDst) {
         this.payload = payload;
         this.keySrc = keySrc;
@@ -42,6 +41,10 @@ public class Transaction {
         setCurrentTime();
     }
 
+    /**
+     * TODO: Use the timestamp provided by NTP server
+     * Set the timestamp of transaction
+     */
     private void setCurrentTime(){
         /*String TIME_SERVER = "time-a.nist.gov";   //server a cui chiedere orario
         NTPUDPClient timeClient = new NTPUDPClient();   //client che fa richiesta per il Network time protocol
@@ -49,43 +52,24 @@ public class Transaction {
         TimeInfo timeInfo = timeClient.getTime(inetAddress);    //ora che ritorna dal server è nell'oggetto TimeInfo
         //long returnTime = timeInfo.getMessage().getTransmitTimeStamp().getTime();
         long returnTime = timeInfo.getMessage().getReceiveTimeStamp().getTime();
-        this.creationTime = returnTime;
-        //InetAddress*/
+        this.creationTime = returnTime;*/
         this.creationTime = new Timestamp(System.currentTimeMillis());        
     }
     public byte[] getSignature() {
         return signature;
     }
 
-    //hash 256 di
-    //timestamp + data + publickeydest + publickeysource conccatenati senza spazi
+    /**
+     * Set the hash of the transaction
+     * Hash will be timestamp + payload + keySrc + keyDst
+     */
     private void setHash(){
         String keyDestString = Base64.getEncoder().encodeToString(keyDst.getEncoded());
         String keySrcString = Base64.getEncoder().encodeToString(keySrc.getEncoded());
         String s = creationTime.toString()+payload.toString()+keyDestString+keySrcString;
-        //System.out.println("Stringa da hashare "+s);
-        try {
-            /*
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(s.getBytes("UTF-8"));
-            transactionHash = Base64.getEncoder().encodeToString(hash);
-            */
-            
+        try {            
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             transactionHash = digest.digest(s.getBytes("UTF-8"));
-            
-            /*System.out.println("Lunghezza "+hash.length);
-            StringBuffer hexString = new StringBuffer();
-
-            for (int i = 0; i < hash.length; i++) {
-              String hex = Integer.toHexString(0xff & hash[i]);
-              if(hex.length() == 1) hexString.append('0');
-              hexString.append(hex);
-            }
-
-            //transactionHash = hexString.toString();
-            transactionHash = hash;*/
-
         }catch(NoSuchAlgorithmException nsae){
             nsae.printStackTrace();
         }catch(UnsupportedEncodingException uee){
@@ -93,21 +77,21 @@ public class Transaction {
         } 
     }
 
+    /**
+     * Sign the transaction hash
+     * @param privateKey the source private key
+     */
     public void sign(PrivateKey privateKey) {
-        //imposto l'hash della transazione
+        //set the hash of the transaction
         setHash();
-
-        //byte output[] = new byte[0]; //conterrà l'hash finale crittografato con la mia chiave privata
         try{
+            //use RSA
             Signature ecdsa = Signature.getInstance("SHA1WithRSA");
+            //sign the messagge with the privat key
             ecdsa.initSign(privateKey);
-            //trasfomro l'input in un flusso di byte
-            //byte[] input = transactionHash;
-            //aggiorno nella signature i valori da essere criptati
             ecdsa.update(transactionHash);
+            //signature is the encrypted transaction hash
             signature = ecdsa.sign();
-            //byte[] realSig = ecdsa.sign();
-            //output = realSig; //in realsign è contenuto l'array di byte del messaggio cifrato con la chiave privata
         }catch(NoSuchAlgorithmException nsae){
             nsae.printStackTrace();
         }catch(InvalidKeyException ike){
@@ -115,12 +99,15 @@ public class Transaction {
         }catch(SignatureException se){
             se.printStackTrace();
         }
-        //salvo il messaggio cifrato in string con codifica utf8
-        //signature = output;
                    
     }
 
+    /**
+     * Verify if the transaction is valid
+     * @return true if it is valid, false otherwise
+     */
     public boolean verify() {
+        //look if same field are modified, hashing again the transactio
         setHash();
         boolean verified = false;
         try {
@@ -138,10 +125,13 @@ public class Transaction {
         return verified;
     }
 
-    
+    /**
+     * Get the hash of the transaction
+     * @return hash
+     */
     public byte[] getTransactionHash(){       
         return transactionHash;
     }
 
-
+  
 }
