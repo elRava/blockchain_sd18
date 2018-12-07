@@ -4,7 +4,9 @@ import java.rmi.*;
 import java.rmi.registry.*;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.io.*;
 import java.util.Date;
 import java.lang.reflect.MalformedParametersException;
@@ -43,9 +45,12 @@ public class RegistryApplication {
         }
 
         try {
-            LocateRegistry.createRegistry(port);
+            // very bad mistake calling calss Registry while exists another calss Registry on java RMI
+            java.rmi.registry.Registry r = LocateRegistry.createRegistry(port);
             reg = new Registry();
-            Naming.bind("//localhost:" + port + "/registry", reg);
+            r.rebind("registry", reg);
+            //System.setProperty("java.rmi.server.hostname", "192.168.1.224");
+            //System.out.println("......." + InetAddress.getLocalHost().getHostAddress());
             System.out.println("Registry bound at //localhost:" + port + "/registry");
             if(fromBackup) {
                 System.out.println("Restoring registry from backup");
@@ -54,12 +59,6 @@ public class RegistryApplication {
             }
         } catch(RemoteException re) {
             re.printStackTrace();
-            System.exit(1);
-        } catch(AlreadyBoundException abe) {
-            abe.printStackTrace();
-            System.exit(1);
-        } catch(MalformedURLException mue) {
-            mue.printStackTrace();
             System.exit(1);
         }
 
@@ -101,9 +100,9 @@ public class RegistryApplication {
                 }
                 // half an hour
                 System.out.println("Cleaning the registry");
-                int before = reg.getIPSet().size();
+                int before = reg.reg.size();
                 reg.clean(1000*30);
-                int after = reg.getIPSet().size();
+                int after = reg.reg.size();
                 System.out.println("Registry cleaned. Removed " + (before - after) + " elements");
                 
             }
