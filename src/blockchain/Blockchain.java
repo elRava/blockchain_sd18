@@ -7,98 +7,119 @@ import java.util.*;
 
 public class Blockchain {
 
-    //Ring first;
     private Ring last;
 
-
+    /**
+     * Constructor of the blockchain
+     * It creates the genesis block at the beginning of the blockchain
+     */
     public Blockchain() {
-        Block genesis = new Block().genesisBlock(); //blocco iniziale aggiunto alla blockchain
-        //unico blocco in cui non faccio setFather, viene impostato automaticamente a null, con il corrispondente depth a 0
+        //first block of the blockchain, genesis block
+        Block genesis = new Block().genesisBlock(); 
+        //it is the only block with father set to null and depth set to 0
         Ring firstBlock = new Ring(genesis);
         this.last = firstBlock;
     }
 
+    /**
+     * Method used to add a mined block on the blockchain
+     * It will be insert according to its previous hash
+     * @param  block it is the block to be added
+     * @return true if the block is succesfully added, false otherwise
+     */
     public boolean addBlock(Block block) {
-        // creare ring e attaccare al posto giusto
-        // va tenuto consistente il riferimento all'ultimo blocco, sarà quello con depth massima
-        // in caso di pareggio tra depth, considero last quello appena attaccato
-        byte[] target = block.getPreviousHash(); //attacco in funzione del previuos hash
-        //if(last.getBlock().getHash()!=target)
+        //Block will be link to the blockchain according to the previous hash field of the block 
+        byte[] target = block.getPreviousHash(); 
+        //In the following I look for the block with this hash
         boolean isAdd = false;
         Ring current = last;
-        //finisce se lo trova, oppure se sono arrivato alla cima senza un nodo valido corrispondente
-        while(!isAdd && current!=null){    
-            System.out.println("Analisi corrente:");
+        //Repeat until it finds block or it arrives at genesis block without finding it
+        while(!isAdd && current!=null){  
+
+            /*System.out.println("Analisi corrente:");
             System.out.println("Hash target da inserire: "+Block.hashToString(target));
-            System.out.println("Corrente hash da valutare: "+Block.hashToString(current.block.getHash()));       
-            if(!Arrays.equals(target,current.block.getHash())){ // non è giusto attaccarlo a last
-                System.out.println("Cerco nei siblings");
+            System.out.println("Corrente hash da valutare: "+Block.hashToString(current.block.getHash()));       */
+
+            //Normally the block will be linked to the last block added to the blockchain
+            if(!Arrays.equals(target,current.block.getHash())){ //If it's not..
+                //I get the list of my siblings               
                 List<Ring> sibling = current.getSiblings();
-                System.out.println("Siblings sono "+sibling.size());
+                //I search recursively in all the subtree with the sibling as root
+                //It is more probable to find there instead of looking deeper 
                 for(int i=0; i<sibling.size() && !isAdd; i++){
                     isAdd = isAdd || DFS(block,sibling.get(i));
-                }
+                }                
             }else{
-                System.out.println("Proprio quello giusto");
-                //si attacca alla radice
-                Ring ring = new Ring(block);
-                //current.addSon(ring);
-                //System.out.println("current "+current)
-
-                //ring.setFather(current);
+                //The last block is the real last
+                //Generate the ring and set father and sons properly
+                Ring ring = new Ring(block);            
                 current.addSon(ring);
-
-                //mantengo la consistenza con last
+                //the last block reference is related to bigger depth
                 if(ring.depth>=last.depth){
                     this.last = ring;
                 }
+                //The block is properly added to the chain
                 isAdd = true;  
-                System.out.println("Blocco corrente con hash "+Block.hashToString(ring.block.getHash())+" appena inserito ha "+ring.sons.size()+" figli");
+                //System.out.println("Blocco corrente con hash "+Block.hashToString(ring.block.getHash())+" appena inserito ha "+ring.sons.size()+" figli");
             }
+            //uodate the current node
             current = current.father;           
-        }    
-        
+        }          
         return isAdd;
          
     }
 
+    //private method used with addBlock
     private boolean DFS(Block block, Ring root){
-        //provo ad attaccarla come un altro figlio del root
+        //target is the same of addNode
         byte[] target = block.getPreviousHash();
         boolean isAdd = false;
+        
+        /*
         System.out.println("Analisi corrente:");
         System.out.println("Hash target da inserire: "+Block.hashToString(target));
         System.out.println("Corrente hash da valutare: "+Block.hashToString(root.block.getHash()));  
+        */
+
+        //I am looking for the hash in the subtree from root
         if(!Arrays.equals(target,root.block.getHash())){
-            System.out.println("Entro nel if");
-            List<Ring> sons = root.sons;     
-            //appena mi ritorna true un sottoramo esco dalla ricerca
+            //If the root is not the block who i am looking for
+            //method is ran recursively on the son
+            //System.out.println("Entro nel if");
+            List<Ring> sons = root.sons;                
             for(int i=0; i<sons.size() && !isAdd; i++){
                 isAdd = isAdd || DFS(block,sons.get(i));
             }
         }else{
-            System.out.println("Match");
-            //il nodo corrispondente corrisponde
+            //I find the proper block
+            //Like in addNode I create a ring and set its father
             Ring ring = new Ring(block);
-           
-            //ring.setFather(root);
             root.addSon(ring);
            
-            //mantengo la consistenza con last
+            //update the last Ring
             if(ring.depth>=last.depth){
                 this.last = ring;
             }
             return true; 
         }
-        //se non ha figli e il nodo corrisondente non corrisponde e non c'è nel sottoalbero allora è false
-        //se è presente nel sottoalbero allora è true
+        //false if the root has no child or if the subtree does not contain the block
         return false || isAdd;          
     }
 
+    /**
+     * Get the reference to the last block on the chain.
+     * It will be used to link to its the following block
+     * @return the block
+     */
     public Block lastBlock(){
         return last.block;
     }
 
+    /**
+     * Get the iterator on the blockchain.
+     * Iterator stats from the last block, reaching the genesis block using only the reference to the father
+     * @return the iterator on the blockchain
+     */
     public Iterator<Block> getIterator() {
         return new BlockchainIterator();
     }
@@ -106,21 +127,25 @@ public class Blockchain {
 
     private class BlockchainIterator implements Iterator<Block> {
 
-        // per iteratore
-        //il cursore corrisponde al blocco che si ottiene facendo next(che concettualmente sarebbe previous)
-        //iteratore va da coda a cima
+        //current position on the chain
         private Ring cursor = last;
 
-        //genesis Block è un blocco valido a tutti gli effetti, torna false solamente quando si punta al blocco precedente al genesis
+        /**
+         * Return if exits a next block, if the father is not null
+         * @return true if exists, false otherwise
+         */
         @Override
         public boolean hasNext() {
             return cursor!=null;
         }
     
+        /**
+         * Method to get the next block on the chain
+         * @return the current block on the list
+         */
         @Override
         public Block next() {
             Block next = cursor.block;
-            //scorre al successivo
             cursor = cursor.father;
             return next;
         }
@@ -134,50 +159,56 @@ public class Blockchain {
         private Ring father;
         private List<Ring> sons;
         private Block block;
+        //depth is the distance from the genesis block
         private int depth;
 
+        /**
+         * Constructor of the ring
+         * @param block it is the block to be added on the chain
+         */
         private Ring(Block block) {
             this.block = block;
             sons = new LinkedList<Ring>();
-            //se non gli imposto il padre successivamente è un blocco che punta all'origine
-            // viene utilizzato solo per il GenesisBlock
+            //used only for the genesis block
             father = null;
             depth = 0;
         }
 
-        //metodo unico per fare il setFather per il figlio e automaticamente aggiunge il figlio alla lista del padre 
-        private void setFather(Ring ring){
-            /*System.out.println("Numero figli padre alla chiamata del metodo "+ring)
-            this.father = ring;
-            ring.sons.add(this);
-            this.depth = ring.depth+1;*/
-        }
 
+        /**
+         * Add a son to this ring
+         * @param ring the ring to be added as a son
+         */
         private void addSon(Ring ring){
+            /*
             System.out.println("Padre "+Block.hashToString(this.block.getHash())+" prima della chiamata del metodo ha "+sons.size()+" figli");
             for(int i=0;i<sons.size();i++){               
                 System.out.println("Figlio "+i+" ha hash "+Block.hashToString(sons.get(i).block.getHash()));
             }
+            */
             sons.add(ring);
             ring.father = this;
             ring.depth = depth +1;
             //System.out.println("Padre dopo la chiamata del metodo ha "+sons.size()+" figli");
-            System.out.println("Padre "+Block.hashToString(this.block.getHash())+" ha "+sons.size()+" figli");
+            /*System.out.println("Padre "+Block.hashToString(this.block.getHash())+" ha "+sons.size()+" figli");
             for(int i=0;i<sons.size();i++){               
                 System.out.println("Figlio "+i+" ha hash "+Block.hashToString(sons.get(i).block.getHash()));
             }
+            */
         }
 
 
+        /**
+         * Used to get the sibling of the node
+         * @return a list of ring with all the siblings
+         */
         private List<Ring> getSiblings(){
             List<Ring> siblings = new LinkedList<Ring>();
             byte[] currentHash = this.block.getHash();
-            System.out.println("Il padre con hash "+Block.hashToString(this.father.block.getHash())+" ha "+this.father.sons.size()+" figli");
+            //System.out.println("Il padre con hash "+Block.hashToString(this.father.block.getHash())+" ha "+this.father.sons.size()+" figli");
             for(Ring r : this.father.sons){
-                byte[] tempHash = r.block.getHash();
-
-
-                if(tempHash!=currentHash){//da controllare se funziona o specificare meglio il "diverso da"
+                //Return only the ring with block's hash different from this block's hash
+                if(r.block.getHash()!=currentHash){
                     siblings.add(r);
                 }
             }

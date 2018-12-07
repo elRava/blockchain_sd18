@@ -304,7 +304,11 @@ public class Block {
         return hexString.toString();
     }
 
-
+    /**
+     * Utility method to get a byte array from a hex string
+     * @param s hex string
+     * @return hex string in byte array format
+     */ 
     public static byte[] hexStringToByteArray(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
