@@ -45,9 +45,10 @@ public class RegistryApplication {
         }
 
         try {
-            LocateRegistry.createRegistry(port);
+            // very bad mistake calling calss Registry while exists another calss Registry on java RMI
+            java.rmi.registry.Registry r = LocateRegistry.createRegistry(port);
             reg = new Registry();
-            Naming.bind("//localhost:" + port + "/registry", reg);
+            r.rebind("registry", reg);
             //System.setProperty("java.rmi.server.hostname", "192.168.1.224");
             //System.out.println("......." + InetAddress.getLocalHost().getHostAddress());
             System.out.println("Registry bound at //localhost:" + port + "/registry");
@@ -58,15 +59,6 @@ public class RegistryApplication {
             }
         } catch(RemoteException re) {
             re.printStackTrace();
-            System.exit(1);
-        } catch(AlreadyBoundException abe) {
-            abe.printStackTrace();
-            System.exit(1);
-        } catch(MalformedURLException mue) {
-            mue.printStackTrace();
-            System.exit(1);
-        } catch(UnknownHostException uhe) {
-            uhe.printStackTrace();
             System.exit(1);
         }
 
