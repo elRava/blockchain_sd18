@@ -255,7 +255,9 @@ public class Block {
 
         MinerThread mt = new MinerThread(difficulty);
         for(int i = 0; i < numThread; i++) {
-            new Thread(mt).start();
+            Thread t = new Thread(mt);
+            t.setDaemon(true);
+            t.start();
         }
         // only one thread at time checks if the hash calculated is verified
         synchronized(isMined){

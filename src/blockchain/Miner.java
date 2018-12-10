@@ -18,6 +18,11 @@ public class Miner implements MinerInterface {
     private List<Block> blockToSend;
     private List<Block> pendingBlock;
 
+    private Thread updateRegistry;
+    private Thread transactionsThread;
+    private Thread blocksThread;
+    private Thread minerThread;
+
     public Miner() throws RemoteException{
         super();
         transactionToSend = new LinkedList<Transaction>();
@@ -52,73 +57,19 @@ public class Miner implements MinerInterface {
     }
 
     public void startThreads() {
-        // thread che aggiorna registro
-        Thread reg = new Thread() {
-            public void run() {
-                //aggiorna il registro, ottenendo la lista di tutti gli inetaddress dal getregistry
-                //while true
-                //getIpaddress
-                //thread sleep
-            }
-        };
-        reg.start();
-        // thread che pensa alle transazioni
-        Thread tr = new Thread() {
-            public void run() {
-                //while(lista non è vuota)
-                //sincronized
-                //wait
-                //ottengo l'elemento dalla lista delle trnsazioni da inviare
-                //lo cancello dalla lista
-                //esco dal sincronized
-                //con la transazione la verifico
-                //valida se non compare mai nella blockchain, e se il verify delle chiavi private e pubbliche ritorna true
-                //non deve già essere presente nella pending list
-                //se va tutto bene lo mando a tutti
-                //alla fine lo metto nella mia lista
 
-                //faccio il notify all per svegliare il miner che dormiva se non c'erano transazioni
-                //se avevo già 4 transazioni pendenti nella pendingTransactions, non rompo il cazzo al miner
-                //se ne avevo di meno devo ristartarlo
-                //ricomincio da capo               
-            }
-        };
-        tr.start();
-        // thread che pensa ai blocchi
-        Thread bl = new Thread() {
-            public void run() {
-                //killa il miner, da vedere se possibile con setDeamond
-                //da vedere semmai se killare il miner solo quando un blocco lo si trova valido
+        updateRegistry = new Thread(new UpdateRegistry());
+        updateRegistry.start();
 
-                //while(empty)
-                //sincronized
-                //wait
-                //prendo in maniera sincronizzata un solo blocco dalla blocktosend
-                //lo rimuovo dalla lista
-                //effettuo la verifica del blocco
-                //verifica è hash valido, transazioni non esistano da nessuna altra parte e transazioni valide
+        transactionsThread = new Thread(new TransactionsThread());
+        transactionsThread.start();
 
-                //se tutto valido mando il blocco a tutti gli altri
-                //aggiungo in maniera sincronizzata su blockchain il blocco alla mia blockchain
-                //ricomincio da capo
-                //se non c'è niente prima di addormentarmi nell'attesa di qualche nuovo blocco sveglio il miner
-                //mi addormento
-            }
-        };
-        bl.start();
-        // thread che mina e basta
-        Thread min = new Thread() {
-            public void run() {
-                //mi creo una lista privata con le transazioni da fare il mining
-                //se non ci sono mi addormento, mi risveglia il thread delle transazioni
-                
-                //inizio il miner del blocco
+        blocksThread = new Thread(new BlocksThread());
+        blocksThread.start();
 
-                //se ho successo e trovo aggiungo al blocktosend
-                //lui si occuperà di tirare via le transazioni minate da pendingTransactions
-            }
-        };
-        min.start();
+        minerThread = new Thread(new MinerThread());
+        minerThread.start();
+        
     }
 
     private Blockchain chooseBlockchain(List<Blockchain> list) {
@@ -128,6 +79,83 @@ public class Miner implements MinerInterface {
         //controllo hash blockchain per vedere se è consistente con quello che mi ha appena inviato
         //faccio tutte le operazioni su synchronized blockchain
         return null;
+    }
+
+
+
+    // thread che aggiorna registro
+    private class UpdateRegistry implements Runnable {
+
+        public void run() {
+            //aggiorna il registro, ottenendo la lista di tutti gli inetaddress dal getregistry
+            //while true
+            //getIpaddress
+            //thread sleep
+        }
+
+    }
+
+    // thread che pensa alle transazioni
+    private class TransactionsThread implements Runnable {
+
+        public void run() {
+            //while(lista non è vuota)
+            //sincronized
+            //wait
+            //ottengo l'elemento dalla lista delle trnsazioni da inviare
+            //lo cancello dalla lista
+            //esco dal sincronized
+            //con la transazione la verifico
+            //valida se non compare mai nella blockchain, e se il verify delle chiavi private e pubbliche ritorna true
+            //non deve già essere presente nella pending list
+            //se va tutto bene lo mando a tutti
+            //alla fine lo metto nella mia lista
+
+            //faccio il notify all per svegliare il miner che dormiva se non c'erano transazioni
+            //se avevo già 4 transazioni pendenti nella pendingTransactions, non rompo il cazzo al miner
+            //se ne avevo di meno devo ristartarlo
+            //ricomincio da capo               
+        }
+
+    }
+
+    // thread che pensa ai blocchi
+    private class BlocksThread implements Runnable {
+
+        public void run() {
+            //killa il miner, da vedere se possibile con setDeamond
+            //da vedere semmai se killare il miner solo quando un blocco lo si trova valido
+
+            //while(empty)
+            //sincronized
+            //wait
+            //prendo in maniera sincronizzata un solo blocco dalla blocktosend
+            //lo rimuovo dalla lista
+            //effettuo la verifica del blocco
+            //verifica è hash valido, transazioni non esistano da nessuna altra parte e transazioni valide
+
+            //se tutto valido mando il blocco a tutti gli altri
+            //aggiungo in maniera sincronizzata su blockchain il blocco alla mia blockchain
+            //ricomincio da capo
+            //se non c'è niente prima di addormentarmi nell'attesa di qualche nuovo blocco sveglio il miner
+            //mi addormento
+        }
+
+    }
+
+    // thread che mina e basta
+    private class MinerThread implements Runnable {
+
+        public void run() {
+            //mi creo una lista privata con le transazioni da fare il mining
+            //se non ci sono mi addormento, mi risveglia il thread delle transazioni
+            
+            //inizio il miner del blocco
+
+            //se ho successo e trovo aggiungo al blocktosend
+            //lui si occuperà di tirare via le transazioni minate da pendingTransactions
+        }
+
     }
 
 
