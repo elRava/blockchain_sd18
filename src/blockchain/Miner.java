@@ -10,7 +10,8 @@ public class Miner implements MinerInterface {
 
     private Blockchain blockchain;
 
-    private List<InetAddress> registry;
+    private List<Registry> registryList;
+    private List<InetAddress> minersIPList;
 
     private List<Transaction> transactionToSend;
     private List<Transaction> pendingTransactions;
@@ -27,9 +28,10 @@ public class Miner implements MinerInterface {
         super();
         transactionToSend = new LinkedList<Transaction>();
         pendingTransactions = new LinkedList<Transaction>();
-        blockToSend = new LinkedList<Block>();
-        pendingBlock = new LinkedList<Block>();
-        registry = null;
+        blockToSend = new LinkedList<>();
+        pendingBlock = new LinkedList<>();
+        registryList = new LinkedList<>();
+        minersIPList = null;
         //chooseBlockchain(list)
     }
 
@@ -45,15 +47,19 @@ public class Miner implements MinerInterface {
         }
     }
 
-    public boolean sendBlock(Block block) throws RemoteException {
+    public void sendBlock(Block block) throws RemoteException {
         //stesso modello delle transactions applicate ai blocchi
         synchronized(blockToSend){
             blockToSend.add(block);
             blockToSend.notifyAll();
             //delega tutti i controlli e le verifiche al thread che aggiunge i blocchi alla blockchain e le manda a tutti
         }
-        //non c'è nessuna verifica
-        return true;
+    }
+
+    public void addRegistry(Registry reg) {
+
+        
+
     }
 
     public void startThreads() {
@@ -81,10 +87,12 @@ public class Miner implements MinerInterface {
         return null;
     }
 
-
-
     // thread che aggiorna registro
     private class UpdateRegistry implements Runnable {
+
+        public UpdateRegistry(int time) {
+
+        }
 
         public void run() {
             //aggiorna il registro, ottenendo la lista di tutti gli inetaddress dal getregistry

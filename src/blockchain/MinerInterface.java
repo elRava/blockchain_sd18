@@ -8,6 +8,6 @@ public interface MinerInterface extends Remote {
 
     public void sendTransaction(Transaction transaction) throws RemoteException;
 
-    public boolean sendBlock(Block block) throws RemoteException;
+    public void sendBlock(Block block) throws RemoteException;
 
 }
