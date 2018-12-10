@@ -58,7 +58,7 @@ public class Miner implements MinerInterface {
 
     public void addRegistry(Registry reg) {
 
-        
+
 
     }
 
@@ -103,7 +103,9 @@ public class Miner implements MinerInterface {
 
     }
 
-    // thread che pensa alle transazioni
+    /**
+     * thread che pensa alle transazioni
+     */
     private class TransactionsThread implements Runnable {
 
         public void run() {
@@ -127,7 +129,9 @@ public class Miner implements MinerInterface {
 
     }
 
-    // thread che pensa ai blocchi
+    /**
+     * thread che pensa ai blocchi
+     */
     private class BlocksThread implements Runnable {
 
         public void run() {
@@ -147,11 +151,14 @@ public class Miner implements MinerInterface {
             //ricomincio da capo
             //se non c'è niente prima di addormentarmi nell'attesa di qualche nuovo blocco sveglio il miner
             //mi addormento
+
         }
 
     }
 
-    // thread che mina e basta
+    /**
+     * thread che mina e basta
+     */
     private class MinerThread implements Runnable {
 
         public void run() {
