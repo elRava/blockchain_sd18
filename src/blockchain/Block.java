@@ -115,6 +115,23 @@ public class Block {
     public Timestamp getMinedTime() {
         return minedTime;
     }
+    
+    /**
+     * Override Object equals method
+     * Two blocks are considered equal if they have the same hash
+     * @param o the object that we want to compare
+     * @return if the object is equal to this
+     */
+    @Override
+    public boolean equals(Object o) {
+        if(! (o instanceof Block)) {
+            return false;
+        }
+        if(hashToString(this.hash).equals(hashToString(((Block) o).getHash()))) {
+            return true;
+        }
+        return false;
+    }
 
     /**
      * TODO: check if it is better to make this method static
@@ -161,7 +178,6 @@ public class Block {
                     calculated[i] = pendingHash[2*i];
                 }
                 
-
             }
 
             pendingHash = calculated;

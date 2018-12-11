@@ -8,16 +8,18 @@ import java.rmi.server.*;
 
 public class Miner implements MinerInterface {
 
+    public static final int DIFFICULTY = 4;
+
     private Blockchain blockchain;
 
     private List<Registry> registryList;
-    private List<InetAddress> minersIPList;
+    private List<MinerInterface> minersIPList;
 
     private List<Transaction> transactionToSend;
     private List<Transaction> pendingTransactions;
 
     private List<Block> blockToSend;
-    private List<Block> pendingBlock;
+    //private List<Block> pendingBlock;
 
     private Thread updateRegistry;
     private Thread transactionsThread;
@@ -29,7 +31,7 @@ public class Miner implements MinerInterface {
         transactionToSend = new LinkedList<Transaction>();
         pendingTransactions = new LinkedList<Transaction>();
         blockToSend = new LinkedList<>();
-        pendingBlock = new LinkedList<>();
+        //pendingBlock = new LinkedList<>();
         registryList = new LinkedList<>();
         minersIPList = null;
         //chooseBlockchain(list)
@@ -63,7 +65,7 @@ public class Miner implements MinerInterface {
     }
 
     public void startThreads() {
-
+        /*
         updateRegistry = new Thread(new UpdateRegistry());
         updateRegistry.start();
 
@@ -75,7 +77,7 @@ public class Miner implements MinerInterface {
 
         minerThread = new Thread(new MinerThread());
         minerThread.start();
-        
+        */
     }
 
     private Blockchain chooseBlockchain(List<Blockchain> list) {
@@ -108,6 +110,7 @@ public class Miner implements MinerInterface {
      */
     private class TransactionsThread implements Runnable {
 
+        @SuppressWarnings("deprecation")
         public void run() {
             //while(lista non è vuota)
             //sincronized
@@ -124,7 +127,65 @@ public class Miner implements MinerInterface {
             //faccio il notify all per svegliare il miner che dormiva se non c'erano transazioni
             //se avevo già 4 transazioni pendenti nella pendingTransactions, non rompo il cazzo al miner
             //se ne avevo di meno devo ristartarlo
-            //ricomincio da capo               
+            //ricomincio da capo 
+
+            while(true) {
+
+                List<Transaction> tempList = new LinkedList<>();
+                synchronized(transactionToSend) {
+                    while(transactionToSend.isEmpty()) {
+                        try {
+                            transactionToSend.wait();
+                        } catch(InterruptedException ie) {
+                            ie.printStackTrace();
+                            System.exit(1);
+                        }
+                    }
+                    // copy list
+                    while(!transactionToSend.isEmpty()) {
+                        tempList.add(transactionToSend.remove(0));
+                    }
+                }
+
+
+                LinkedList<MinerInterface> listMiners = null;
+                synchronized(minersIPList) {
+                    // just clone
+                    listMiners = new LinkedList<MinerInterface>();
+                    for(MinerInterface mi : minersIPList) {
+                        listMiners.add(mi);
+                    }
+                }
+
+                while(!tempList.isEmpty()) {
+                    Transaction t = tempList.remove(0);
+                    
+                    if(t.verify() && !pendingTransactions.contains(t) && !blockchain.contains(t)) {
+                        // send to every miner
+                        for(MinerInterface mi : listMiners) {
+                            try {
+                                mi.sendTransaction(t);
+                            } catch(RemoteException re) {
+                                re.printStackTrace();
+                            }
+                        }
+
+                        synchronized(pendingTransactions) {
+                            pendingTransactions.add(t);
+                            //pendingTransactions.notifyAll();
+                        }
+
+                        // restart miner thread
+                        //@SuppressWarnings("deprecation")
+                        minerThread.stop();
+                        minerThread.start();
+
+                    }
+
+                }
+
+            }
+
         }
 
     }
@@ -134,6 +195,7 @@ public class Miner implements MinerInterface {
      */
     private class BlocksThread implements Runnable {
 
+        @SuppressWarnings("deprecation")
         public void run() {
             //killa il miner, da vedere se possibile con setDeamond
             //da vedere semmai se killare il miner solo quando un blocco lo si trova valido
@@ -151,6 +213,70 @@ public class Miner implements MinerInterface {
             //ricomincio da capo
             //se non c'è niente prima di addormentarmi nell'attesa di qualche nuovo blocco sveglio il miner
             //mi addormento
+
+            minerThread.stop();
+
+            List<Block> tempList = new LinkedList<>();
+            synchronized(blockToSend) {
+                while(blockToSend.isEmpty()) {
+                    try {
+                        blockToSend.wait();
+                    } catch(InterruptedException ie) {
+                        ie.printStackTrace();
+                        System.exit(1);
+                    }
+                    // copy list
+                    while(!blockToSend.isEmpty()) {
+                        tempList.add(blockToSend.remove(0));
+                    }
+                }
+            }
+
+            LinkedList<MinerInterface> listMiners = null;
+            synchronized(minersIPList) {
+                // just clone
+                listMiners = new LinkedList<MinerInterface>();
+                for(MinerInterface mi : minersIPList) {
+                    listMiners.add(mi);
+                }
+            }
+
+            while(!tempList.isEmpty()) {
+                Block b = tempList.remove(0);
+                
+                if(b.verifyBlock(DIFFICULTY) && !blockchain.contains(b)) {
+
+                    for(Transaction t : b.getListTransactions()) {
+                        if(blockchain.contains(t)) {
+                            continue;
+                        }
+                    }
+                    
+                    blockchain.addBlock(b);
+
+                    // send to every miner
+                    for(MinerInterface mi : listMiners) {
+                        try {
+                            mi.sendBlock(b);
+                        } catch(RemoteException re) {
+                            re.printStackTrace();
+                        }
+                    }
+                    /*
+                    synchronized(pendingTransactions) {
+                        pendingTransactions.add(t);
+                        //pendingTransactions.notifyAll();
+                    }
+                    */
+                    // restart miner thread
+                    //@SuppressWarnings("deprecation")
+                    //minerThread.stop();
+                    minerThread.start();
+
+                }
+
+            }
+
 
         }
 

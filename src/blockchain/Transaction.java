@@ -42,6 +42,31 @@ public class Transaction {
     }
 
     /**
+     * Get the hash of the transaction
+     * @return the hash of the transaction after it is calculated
+     */
+    public byte[] getHash() {
+        return transactionHash;
+    }
+
+    /**
+     * Override Object equals method
+     * Two Transactions are considered equal if they have the same hash
+     * @param o the object that we want to compare
+     * @return if the object is equal to this
+     */
+    @Override
+    public boolean equals(Object o) {
+        if(! (o instanceof Transaction)) {
+            return false;
+        }
+        if(Block.hashToString(this.transactionHash).equals(Block.hashToString(((Transaction) o).getHash()))) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * TODO: Use the timestamp provided by NTP server
      * Set the timestamp of transaction
      */

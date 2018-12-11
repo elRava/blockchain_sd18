@@ -69,6 +69,27 @@ public class Blockchain {
          
     }
 
+    public boolean contains(Transaction transaction) {
+        Iterator it = this.getIterator();
+        while(it.hasNext()) {
+            Block b = it.next();
+            if(b.getListTransactions().contains(transaction)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean contains(Block block) {
+        Iterator it = this.getIterator();
+        while(it.hasNext()) {
+            if(it.next().equals(block)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     //private method used with addBlock
     private boolean DFS(Block block, Ring root){
         //target is the same of addNode
