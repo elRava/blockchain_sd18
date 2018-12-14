@@ -82,13 +82,64 @@ public class Miner implements MinerInterface {
         
     }
 
-    private Blockchain chooseBlockchain(List<Blockchain> list) {
-        //prendo gli hash della blockchain da tutti quelli cui sono attaccato
-        //quello che ha occorrenze maggiori è il vincitore
-        //da lui scarico la blockchain
-        //controllo hash blockchain per vedere se è consistente con quello che mi ha appena inviato
-        //faccio tutte le operazioni su synchronized blockchain
-        return null;
+    private void chooseBlockchain() {
+        List<byte[]> listHash = new LinkedList<byte[]>();
+        synchronized(minersIPList){
+            Iterator<MinerInterface> iterMiner = minersIPList.iterator();           
+            while(iterMiner.hasNext()){ 
+                try{   
+                    listHash.add(iterMiner.next().getBlockchain().getHash());
+                }catch(RemoteException re){
+                    re.printStackTrace();
+                }    
+            }
+        }
+
+        //I need to find which blockchain is the most frequent
+        Map<byte[],Integer> map = new HashMap<byte[],Integer>();
+        Iterator<byte[]> iterByte = listHash.iterator();
+        while(iterByte.hasNext()){
+            byte[] current = iterByte.next();
+            if(!map.containsKey(current)){
+                map.put(current, 1);
+            }else{
+                int previousOccurance = map.get(current);
+                previousOccurance++;
+                map.put(current, previousOccurance);
+            }
+        }
+
+        Set<byte[]> setByte = map.keySet();
+        Iterator<byte[]> occurance = setByte.iterator();
+        byte[] longer = occurance.next();
+        int occ = map.get(longer);
+        while(occurance.hasNext()){
+           byte[] current = occurance.next();
+           if(map.get(current)>occ){
+               longer=current;
+               occ = map.get(current);
+           } 
+        }
+
+        
+        //i find the hash of the blockchain 
+        synchronized(minersIPList){
+            Iterator<MinerInterface> minerIter = minersIPList.iterator();
+            while(minerIter.hasNext()){
+                MinerInterface currentMiner = minerIter.next();
+                try{
+                    if(Arrays.equals(currentMiner.getBlockchain().getHash(), longer)){
+                        synchronized(blockchain){
+                            blockchain = currentMiner.getBlockchain();
+                            break;
+                        }    
+                    }   
+                }catch(RemoteException re){
+                    re.printStackTrace();
+                }               
+            }
+        }
+
     }
 
     // thread che aggiorna registro
