@@ -4,10 +4,13 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class Blockchain {
 
     private Ring last;
+    private byte[] hash;
 
     /**
      * Constructor of the blockchain
@@ -68,6 +71,78 @@ public class Blockchain {
         return isAdd;
          
     }
+
+    public void computeHash(){
+        Iterator<Block> iter = this.getIterator(); 
+        final int SHA256LENGTH = 32;     
+        byte[] finalhash = iter.next().getHash();
+        while(iter.hasNext()){          
+            byte[] current = iter.next().getHash();
+            byte[] temp = new byte[2 * SHA256LENGTH ];
+            for(int i=0; i<SHA256LENGTH; i++){
+                temp[i]=finalhash[i];
+                temp[i+SHA256LENGTH]=current[i];
+            } 
+            try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                finalhash = digest.digest(finalhash);
+            }catch(NoSuchAlgorithmException nsae) {
+                nsae.printStackTrace();
+                System.exit(1);
+            }
+        }
+        this.hash = finalhash;
+    }
+
+    public byte[] getHash(){
+        return this.hash;
+    }
+
+    /*
+    public boolean contains(Block b){
+        Iterator<Block> iter = this.getIterator();
+        byte[] target = b.getHash();
+        while(iter.hasNext()){
+            byte[] current = iter.next().getHash();
+            boolean same = true;
+            for(int i=0; i< target.length; i++){
+                if(current[i]!=target[i]){
+                    same = false;
+                    break;
+                }
+            }
+            if(same){
+                return true;
+            }
+        }
+        return false;
+    }
+    
+
+    public boolean contains(Transaction t){
+        Iterator<Block> iter = this.getIterator();
+        byte[] target = t.getTransactionHash();
+        while(iter.hasNext()){
+            Block currentBlock = iter.next();
+            List<Transaction> allTran = currentBlock.getListTransactions();
+            Iterator<Transaction> iterTran = allTran.iterator();
+            while(iterTran.hasNext()){
+                byte[] currentTran = iterTran.next().getTransactionHash();
+                boolean same = true;
+                for(int i=0; i< cur.length; i++){
+                    if(current[i]!=target[i]){
+                        same = false;
+                        break;
+                    }  
+                }     
+            }
+            if(same){
+                return true;
+            }
+            }
+        }
+
+    }*/
 
     //private method used with addBlock
     private boolean DFS(Block block, Ring root){
