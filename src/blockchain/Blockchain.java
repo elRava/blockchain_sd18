@@ -120,6 +120,9 @@ public class Blockchain {
 
 
     public byte[] getHash(){
+        if(this.hash==null){
+            computeHash();
+        }    
         return this.hash;
     }
 

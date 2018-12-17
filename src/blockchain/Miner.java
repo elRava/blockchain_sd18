@@ -37,7 +37,7 @@ public class Miner implements MinerInterface {
         blockToSend = new LinkedList<>();
         //pendingBlock = new LinkedList<>();
         registryList = new LinkedList<>();
-        minersIPList = null;
+        minersIPList = new LinkedList<>();
         //chooseBlockchain(list)
     }
 
@@ -69,10 +69,10 @@ public class Miner implements MinerInterface {
     }
 
     public void startThreads() {
-        /*
-        updateRegistry = new Thread(new UpdateRegistry(0,0));
+        
+        updateRegistry = new Thread(new UpdateRegistry(20000,0));
         updateRegistry.start();
-
+        /*
         transactionsThread = new Thread(new TransactionsThread());
         transactionsThread.start();
 
@@ -163,7 +163,7 @@ public class Miner implements MinerInterface {
                 List<InetSocketAddress> updatedMinerList = new LinkedList<InetSocketAddress>(); 
 
                 //InetSocketAddress of the miner
-                int myPort = 7687;
+                int myPort = 7392;
                 InetSocketAddress myAddress = null;
                 try{
                     myAddress = new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), myPort);            
@@ -192,7 +192,8 @@ public class Miner implements MinerInterface {
                    
                 //now i want to connect to a fixed number to miner
                 //if i don't know so many address i will connect to all
-                int numberMiner = Math.min(updatedMinerList.size(), numberConnection);
+                //-1 because we don't want to consider itself, problem if it is the only one
+                int numberMiner = Math.min(updatedMinerList.size()-1, numberConnection);
 
                 //random generator
                 Random r = new Random();
@@ -204,7 +205,7 @@ public class Miner implements MinerInterface {
 
                 //I continue until i reach the target number of connection
                 while(chosedMiner.size()<numberMiner){
-                    int find = r.nextInt(chosedMiner.size());
+                    int find = r.nextInt(updatedMinerList.size());
                     InetSocketAddress chose = updatedMinerList.get(find);
                     boolean valid = true;
 
@@ -223,6 +224,7 @@ public class Miner implements MinerInterface {
                         MinerInterface m = null;
                         String ip = chose.getAddress().getHostAddress();
                         int port =chose.getPort();
+                        System.out.println("Mi provo a collegare a IP "+ip+" e porta "+port);
                         try{
                             m = (MinerInterface) Naming.lookup("//" + ip+":"+port + "/miner"); 
                         }catch(RemoteException re){
@@ -246,9 +248,11 @@ public class Miner implements MinerInterface {
                 }
 
                 //list with minerInterface is completed
-                synchronized(minersIPList){
-                    minersIPList = chosedMiner;
-                }
+                if(chosedMiner.size()>0){
+                    synchronized(minersIPList){
+                        minersIPList = chosedMiner;
+                    }
+                }    
 
                 try{
                     Thread.sleep(delayTime);

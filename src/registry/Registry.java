@@ -42,7 +42,7 @@ public class Registry extends UnicastRemoteObject implements RegistryInterface {
         synchronized(reg) {
             Timestamp ts = new Timestamp(System.currentTimeMillis());
             reg.put(address, ts);
-            System.out.println("... Registered " + address.getHostName() + ":" + address.getPort() + "   " + ts.toString());
+            System.out.println("... Registered " + address.getHostName() + ":" + address.getPort() + "   " + ts.toString() + "   Count: " + reg.size());
         }
     }
 

@@ -264,9 +264,35 @@ public class TestClassBlockchain {
             System.out.println("Blocco "+i+" ha hash: "+Block.hashToString(iter.next().getHash()));
             i++;
         }
+        chain.computeHash();
+        System.out.println("Hash finale "+Block.hashToString(chain.getHash()));
+
+        /*
+        Blockchain chain2 = new Blockchain();
+        chain2.addBlock(b1);
+        chain2.addBlock(b2);
+        //chain2.addBlock(b3);
+        //chain2.addBlock(b4);
+        //chain2.addBlock(b5);
+        //chain2.addBlock(b6);
+        //chain2.addBlock(b7);
+        chain2.computeHash();
+
+        System.out.println("Hash finale 2 "+Block.hashToString(chain2.getHash()));
+        */
+
+        System.out.println("Contiene b1? "+chain.contains(b1));
+        System.out.println("Contiene b2? "+chain.contains(b2));
+        System.out.println("Contiene b3? "+chain.contains(b3));
+        System.out.println("Contiene b4? "+chain.contains(b4));
+        System.out.println("Contiene b5? "+chain.contains(b5));
+        System.out.println("Contiene b6? "+chain.contains(b6));
+        System.out.println("Contiene b7? "+chain.contains(b7));
+        //System.out.println("Contiene genesis? "+chain.contains(chain.));
 
 
-
+        System.out.println("Contiene t1? " +chain.contains(t1));
+        System.out.println("Contiene t3? " +chain.contains(t3));
 
     }
 
