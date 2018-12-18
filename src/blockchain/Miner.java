@@ -205,8 +205,10 @@ public class Miner implements MinerInterface {
 
                 //I continue until i reach the target number of connection
                 while(chosedMiner.size()<numberMiner){
+
                     int find = r.nextInt(updatedMinerList.size());
                     InetSocketAddress chose = updatedMinerList.get(find);
+                    updatedMinerList.remove(find);
                     boolean valid = true;
 
                     //avoid to keep the same twice
@@ -244,7 +246,8 @@ public class Miner implements MinerInterface {
                             addressChosedMiner.add(chose);
                         }
                     }    
-                    
+                    //I compute at avery itaration the possible number of miner
+                    numberMiner = Math.min(updatedMinerList.size()-1, numberConnection);
                 }
 
                 //list with minerInterface is completed
