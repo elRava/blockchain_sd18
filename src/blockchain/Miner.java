@@ -218,7 +218,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     }
                 }
 
-                System.out.println("Tutti i miner che ricevo dal registry sono: " + updatedMinerList.size());
+                //System.out.println("Tutti i miner che ricevo dal registry sono: " + updatedMinerList.size());
 
                 // now i want to connect to a fixed number to miner
                 // if i don't know so many address i will connect to all
@@ -237,15 +237,15 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 System.out.println("Attualmente connesso a " + chosedMiner.size() + " Miner");
                 while (chosedMiner.size() < numberMiner  && updatedMinerList.size()>0) {
                     
-                    System.out.println("Attualmente connesso a " + chosedMiner.size() + " Miner");
-                    System.out.println("Possibili miner ancora da testare " + updatedMinerList.size());
+                    //System.out.println("Attualmente connesso a " + chosedMiner.size() + " Miner");
+                    //System.out.println("Possibili miner ancora da testare " + updatedMinerList.size());
                     int find = r.nextInt(updatedMinerList.size());
                     InetSocketAddress chose = updatedMinerList.get(find);
                     updatedMinerList.remove(find);
                     try {
                         if (chose.getAddress().getHostAddress().equals(InetAddress.getLocalHost().getHostAddress())
                                 && chose.getPort() == myPort) {
-                            System.out.println("Ho rimosso il mio");
+                            //System.out.println("Ho rimosso il mio");
                             continue;
                         }
                     } catch (UnknownHostException uhe) {
@@ -268,18 +268,18 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         MinerInterface m = null;
                         String ip = chose.getAddress().getHostAddress();
                         int portMiner = chose.getPort();
-                        System.out.println("Mi provo a collegare a IP " + ip + " e porta " + portMiner);
+                        //System.out.println("Mi provo a collegare a IP " + ip + " e porta " + portMiner);
                         try {
                             m = (MinerInterface) Naming.lookup("//" + ip + ":" + portMiner + "/miner");
-                            System.out.println("Collegamento riuscito a IP " + ip + " e porta " + portMiner);
+                            System.out.println("Successfully connected to IP " + ip + ":" + portMiner);
                         } catch (RemoteException re) {
-                            re.printStackTrace();
+                            //re.printStackTrace();
                             m = null;
                         } catch (NotBoundException nbe) {
-                            nbe.printStackTrace();
+                            //nbe.printStackTrace();
                             m = null;
                         } catch (MalformedURLException mue) {
-                            mue.printStackTrace();
+                            //mue.printStackTrace();
                             m = null;
                         }
                         // if i am able to connect, i add to the list
@@ -288,12 +288,12 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             chosedMiner.add(m);
                             addressChosedMiner.add(chose);
                         }
-                        System.out.println("Miner totali connessi: " + chosedMiner.size());
+                        System.out.println("Total connected miner: " + chosedMiner.size());
                     }
                     // I compute at avery itaration the possible number of miner
             
                     //numberMiner = Math.min(updatedMinerList.size() , numberConnection - chosedMiner.size());
-                    System.out.println("Number Miner da raggiungere "+numberMiner);
+                    //System.out.println("Number Miner da raggiungere "+numberMiner);
 
                 }
 
