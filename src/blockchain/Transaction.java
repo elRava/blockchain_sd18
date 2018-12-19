@@ -12,12 +12,13 @@ import java.security.SignatureException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.*;
+import java.io.*;
 import java.security.MessageDigest;
 import java.nio.charset.*;
 
 
 
-public class Transaction {
+public class Transaction implements Serializable{
 
     private Object payload;
     private Timestamp creationTime;

@@ -80,6 +80,8 @@ public class MinerApplication {
             System.exit(1);
         }
 
+        
+
         /*
          * int portReg = 7867; String ip = "192.168.1.72";
          */

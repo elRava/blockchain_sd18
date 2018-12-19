@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.util.*;
+import java.io.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -14,7 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Giuseppe Ravagnani
  * @version 1.0
  */
-public class Block {
+public class Block implements Serializable {
 
     // list of fixed length. Fill with at most LIST_LENGTH transactions
     public static final int LIST_LENGTH = 4;

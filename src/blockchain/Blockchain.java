@@ -4,10 +4,11 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.*;
+import java.io.Serializable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class Blockchain {
+public class Blockchain implements Serializable{
 
     private Ring last;
     private byte[] hash;
@@ -254,7 +255,7 @@ public class Blockchain {
     }
 
 
-    private class Ring {
+    private class Ring implements Serializable {
 
         private Ring father;
         private List<Ring> sons;

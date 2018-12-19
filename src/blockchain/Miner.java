@@ -43,6 +43,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         minersIPList = new LinkedList<>();
         // chooseBlockchain(list)
         myPort = DEFAULT_PORT;
+        blockchain = new Blockchain();
     }
 
     public Blockchain getBlockchain() throws RemoteException {
