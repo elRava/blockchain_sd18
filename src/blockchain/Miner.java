@@ -1,5 +1,6 @@
 package blockchain;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -7,6 +8,7 @@ import java.net.UnknownHostException;
 import java.rmi.*;
 import java.rmi.registry.Registry;
 import java.util.*;
+import java.net.*;
 import registry.*;
 import java.rmi.server.*;
 
@@ -152,6 +154,28 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     }
 
+    public static InetAddress getMyAddress() {
+        Enumeration e = null;
+        try{
+            e = NetworkInterface.getNetworkInterfaces();
+        }catch(SocketException s){
+            s.printStackTrace();
+        }
+        while (e.hasMoreElements()) {
+            NetworkInterface n = (NetworkInterface) e.nextElement();
+            Enumeration ee = n.getInetAddresses();
+            while (ee.hasMoreElements()) {
+                InetAddress i = (InetAddress) ee.nextElement();
+                if (!i.isLoopbackAddress() && i instanceof Inet4Address) {
+                    return i;
+                }
+                // System.out.println(i.getHostAddress());
+            }
+        }
+        return null;
+
+    }
+
     // thread che aggiorna registro
     private class UpdateRegistry implements Runnable {
 
@@ -173,11 +197,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 // InetSocketAddress of the miner
 
                 InetSocketAddress myAddress = null;
-                try {
-                    myAddress = new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), myPort);
-                } catch (UnknownHostException uhe) {
-                    uhe.printStackTrace();
-                }
+                myAddress = new InetSocketAddress(getMyAddress(), myPort);
 
                 synchronized (registryList) {
                     Iterator<RegistryInterface> regIter = registryList.iterator();
@@ -198,6 +218,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     }
                 }
 
+                System.out.println("Tutti i miner che ricevo dal registry sono: " + updatedMinerList.size());
+
                 // now i want to connect to a fixed number to miner
                 // if i don't know so many address i will connect to all
                 // -1 because we don't want to consider itself, problem if it is the only one
@@ -215,15 +237,17 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 System.out.println("Attualmente connesso a " + chosedMiner.size() + " Miner");
                 while (chosedMiner.size() < numberMiner) {
                     System.out.println("Attualmente connesso a " + chosedMiner.size() + " Miner");
+                    System.out.println("Possibili miner ancora da testare " + updatedMinerList.size());
                     int find = r.nextInt(updatedMinerList.size());
                     InetSocketAddress chose = updatedMinerList.get(find);
                     updatedMinerList.remove(find);
-                    try{
+                    try {
                         if (chose.getAddress().getHostAddress().equals(InetAddress.getLocalHost().getHostAddress())
                                 && chose.getPort() == myPort) {
+                            System.out.println("Ho rimosso il mio");
                             continue;
                         }
-                    }catch(UnknownHostException uhe){
+                    } catch (UnknownHostException uhe) {
                         uhe.printStackTrace();
                     }
                     boolean valid = true;
@@ -263,10 +287,10 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             chosedMiner.add(m);
                             addressChosedMiner.add(chose);
                         }
-                        System.out.println("Miner totali connessi: "+chosedMiner.size());
+                        System.out.println("Miner totali connessi: " + chosedMiner.size());
                     }
                     // I compute at avery itaration the possible number of miner
-                    numberMiner = Math.min(updatedMinerList.size() - 1, numberConnection);
+                    //numberMiner = Math.min(updatedMinerList.size() - 1, numberConnection);
                 }
 
                 // list with minerInterface is completed
