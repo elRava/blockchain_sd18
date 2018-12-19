@@ -11,7 +11,7 @@ public class TestClassInet{
         map.put(1, "tutti");
         map.put(2,"hi");
 
-        String s = map.get(1);
+        List<String> = map.k
         System.out.println("valore"+s);
     }
 

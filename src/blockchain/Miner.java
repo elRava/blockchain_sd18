@@ -13,6 +13,7 @@ import java.rmi.server.*;
 public class Miner implements MinerInterface {
 
     public static final int DIFFICULTY = 4;
+    public static final int DEFAULT_PORT = 7392;
 
     private Blockchain blockchain;
 
@@ -23,22 +24,25 @@ public class Miner implements MinerInterface {
     private List<Transaction> pendingTransactions;
 
     private List<Block> blockToSend;
-    //private List<Block> pendingBlock;
+    // private List<Block> pendingBlock;
 
     private Thread updateRegistry;
     private Thread transactionsThread;
     private Thread blocksThread;
     private Thread minerThread;
 
-    public Miner() throws RemoteException{
+    private int myPort;
+
+    public Miner() throws RemoteException {
         super();
         transactionToSend = new LinkedList<Transaction>();
         pendingTransactions = new LinkedList<Transaction>();
         blockToSend = new LinkedList<>();
-        //pendingBlock = new LinkedList<>();
+        // pendingBlock = new LinkedList<>();
         registryList = new LinkedList<>();
         minersIPList = new LinkedList<>();
-        //chooseBlockchain(list)
+        // chooseBlockchain(list)
+        myPort = DEFAULT_PORT;
     }
 
     public Blockchain getBlockchain() throws RemoteException {
@@ -46,65 +50,69 @@ public class Miner implements MinerInterface {
     }
 
     public void sendTransaction(Transaction transaction) throws RemoteException {
-        synchronized(transactionToSend){
+        synchronized (transactionToSend) {
             transactionToSend.add(transaction);
             transactionToSend.notifyAll();
-            //delega tutti i controlli e le verifiche al thread che aggiunge le transazioni e le manda a tutti
+            // delega tutti i controlli e le verifiche al thread che aggiunge le transazioni
+            // e le manda a tutti
         }
     }
 
     public void sendBlock(Block block) throws RemoteException {
-        //stesso modello delle transactions applicate ai blocchi
-        synchronized(blockToSend){
+        // stesso modello delle transactions applicate ai blocchi
+        synchronized (blockToSend) {
             blockToSend.add(block);
             blockToSend.notifyAll();
-            //delega tutti i controlli e le verifiche al thread che aggiunge i blocchi alla blockchain e le manda a tutti
+            // delega tutti i controlli e le verifiche al thread che aggiunge i blocchi alla
+            // blockchain e le manda a tutti
         }
     }
 
     public void addRegistry(RegistryInterface reg) {
-        synchronized(registryList){
+        synchronized (registryList) {
             registryList.add(reg);
         }
     }
 
+    public void setPort(int port) {
+        myPort = port;
+    }
+
     public void startThreads() {
-        
-        updateRegistry = new Thread(new UpdateRegistry(20000,0));
+
+        updateRegistry = new Thread(new UpdateRegistry(20000, 10));
         updateRegistry.start();
         /*
-        transactionsThread = new Thread(new TransactionsThread());
-        transactionsThread.start();
-
-        blocksThread = new Thread(new BlocksThread());
-        blocksThread.start();
-
-        minerThread = new Thread(new MinerThread(3,3));
-        minerThread.start();
-        */
+         * transactionsThread = new Thread(new TransactionsThread());
+         * transactionsThread.start();
+         * 
+         * blocksThread = new Thread(new BlocksThread()); blocksThread.start();
+         * 
+         * minerThread = new Thread(new MinerThread(3,3)); minerThread.start();
+         */
     }
 
     private void chooseBlockchain() {
         List<byte[]> listHash = new LinkedList<byte[]>();
-        synchronized(minersIPList){
-            Iterator<MinerInterface> iterMiner = minersIPList.iterator();           
-            while(iterMiner.hasNext()){ 
-                try{   
+        synchronized (minersIPList) {
+            Iterator<MinerInterface> iterMiner = minersIPList.iterator();
+            while (iterMiner.hasNext()) {
+                try {
                     listHash.add(iterMiner.next().getBlockchain().getHash());
-                }catch(RemoteException re){
+                } catch (RemoteException re) {
                     re.printStackTrace();
-                }    
+                }
             }
         }
 
-        //I need to find which blockchain is the most frequent
-        Map<byte[],Integer> map = new HashMap<byte[],Integer>();
+        // I need to find which blockchain is the most frequent
+        Map<byte[], Integer> map = new HashMap<byte[], Integer>();
         Iterator<byte[]> iterByte = listHash.iterator();
-        while(iterByte.hasNext()){
+        while (iterByte.hasNext()) {
             byte[] current = iterByte.next();
-            if(!map.containsKey(current)){
+            if (!map.containsKey(current)) {
                 map.put(current, 1);
-            }else{
+            } else {
                 int previousOccurance = map.get(current);
                 previousOccurance++;
                 map.put(current, previousOccurance);
@@ -115,30 +123,29 @@ public class Miner implements MinerInterface {
         Iterator<byte[]> occurance = setByte.iterator();
         byte[] longer = occurance.next();
         int occ = map.get(longer);
-        while(occurance.hasNext()){
-           byte[] current = occurance.next();
-           if(map.get(current)>occ){
-               longer=current;
-               occ = map.get(current);
-           } 
+        while (occurance.hasNext()) {
+            byte[] current = occurance.next();
+            if (map.get(current) > occ) {
+                longer = current;
+                occ = map.get(current);
+            }
         }
 
-        
-        //i find the hash of the blockchain 
-        synchronized(minersIPList){
+        // i find the hash of the blockchain
+        synchronized (minersIPList) {
             Iterator<MinerInterface> minerIter = minersIPList.iterator();
-            while(minerIter.hasNext()){
+            while (minerIter.hasNext()) {
                 MinerInterface currentMiner = minerIter.next();
-                try{
-                    if(Arrays.equals(currentMiner.getBlockchain().getHash(), longer)){
-                        synchronized(blockchain){
+                try {
+                    if (Arrays.equals(currentMiner.getBlockchain().getHash(), longer)) {
+                        synchronized (blockchain) {
                             blockchain = currentMiner.getBlockchain();
                             break;
-                        }    
-                    }   
-                }catch(RemoteException re){
+                        }
+                    }
+                } catch (RemoteException re) {
                     re.printStackTrace();
-                }               
+                }
             }
         }
 
@@ -150,35 +157,35 @@ public class Miner implements MinerInterface {
         private long delayTime;
         private int numberConnection;
 
-        //size sono il numero di miner cui voglio connettermi
-        //se voglio size ip sono interessato al fatto che non ne voglio di uguali
+        // size sono il numero di miner cui voglio connettermi
+        // se voglio size ip sono interessato al fatto che non ne voglio di uguali
         public UpdateRegistry(long time, int numberConnection) {
             this.delayTime = time;
             this.numberConnection = numberConnection;
         }
 
         public void run() {
-            while(true){
-                //it contains all the InetSocketAddress obtained from all the registry
-                List<InetSocketAddress> updatedMinerList = new LinkedList<InetSocketAddress>(); 
+            while (true) {
+                // it contains all the InetSocketAddress obtained from all the registry
+                List<InetSocketAddress> updatedMinerList = new LinkedList<InetSocketAddress>();
 
-                //InetSocketAddress of the miner
-                int myPort = 7392;
+                // InetSocketAddress of the miner
+
                 InetSocketAddress myAddress = null;
-                try{
-                    myAddress = new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), myPort);            
-                }catch(UnknownHostException uhe){
+                try {
+                    myAddress = new InetSocketAddress(InetAddress.getLocalHost().getHostAddress(), myPort);
+                } catch (UnknownHostException uhe) {
                     uhe.printStackTrace();
                 }
-                
 
-                synchronized(registryList){  
+                synchronized (registryList) {
                     Iterator<RegistryInterface> regIter = registryList.iterator();
                     while (regIter.hasNext()) {
                         RegistryInterface actual = regIter.next();
                         List<InetSocketAddress> addressFromThis = null; // inetsocketaddress from the actual registry
                         try {
                             actual.register(myAddress);
+                            System.out.println("Correttamente registrato");
                             addressFromThis = actual.getIPSet();
                         } catch (RemoteException re) {
                             re.printStackTrace();
@@ -189,82 +196,91 @@ public class Miner implements MinerInterface {
                         }
                     }
                 }
-                   
-                //now i want to connect to a fixed number to miner
-                //if i don't know so many address i will connect to all
-                //-1 because we don't want to consider itself, problem if it is the only one
-                int numberMiner = Math.min(updatedMinerList.size()-1, numberConnection);
 
-                //random generator
+                // now i want to connect to a fixed number to miner
+                // if i don't know so many address i will connect to all
+                // -1 because we don't want to consider itself, problem if it is the only one
+                int numberMiner = Math.min(updatedMinerList.size() - 1, numberConnection);
+
+                // random generator
                 Random r = new Random();
-                
-                //the final list of all the working connection
+
+                // the final list of all the working connection
                 List<MinerInterface> chosedMiner = new LinkedList<MinerInterface>();
 
                 List<InetSocketAddress> addressChosedMiner = new LinkedList<InetSocketAddress>();
 
-                //I continue until i reach the target number of connection
-                while(chosedMiner.size()<numberMiner){
-
+                // I continue until i reach the target number of connection
+                System.out.println("Attualmente connesso a " + chosedMiner.size() + " Miner");
+                while (chosedMiner.size() < numberMiner) {
+                    System.out.println("Attualmente connesso a " + chosedMiner.size() + " Miner");
                     int find = r.nextInt(updatedMinerList.size());
                     InetSocketAddress chose = updatedMinerList.get(find);
                     updatedMinerList.remove(find);
+                    try{
+                        if (chose.getAddress().getHostAddress().equals(InetAddress.getLocalHost().getHostAddress())
+                                && chose.getPort() == myPort) {
+                            continue;
+                        }
+                    }catch(UnknownHostException uhe){
+                        uhe.printStackTrace();
+                    }
                     boolean valid = true;
 
-                    //avoid to keep the same twice
+                    // avoid to keep the same twice
                     Iterator<InetSocketAddress> iterAdd = addressChosedMiner.iterator();
-                    while(iterAdd.hasNext()){
+                    while (iterAdd.hasNext()) {
                         InetSocketAddress actual = iterAdd.next();
-                        if(actual.getAddress().getHostAddress().equals(chose.getAddress().getHostAddress())
-                            && actual.getPort() == chose.getPort()){
-                                valid = false;
-                                break;
+                        if (actual.getAddress().getHostAddress().equals(chose.getAddress().getHostAddress())
+                                && actual.getPort() == chose.getPort()) {
+                            valid = false;
+                            break;
                         }
                     }
-                    if(valid){  
-                        //I create the reference to the remote object, if it is possible
+                    if (valid) {
+                        // I create the reference to the remote object, if it is possible
                         MinerInterface m = null;
                         String ip = chose.getAddress().getHostAddress();
-                        int port =chose.getPort();
-                        System.out.println("Mi provo a collegare a IP "+ip+" e porta "+port);
-                        try{
-                            m = (MinerInterface) Naming.lookup("//" + ip+":"+port + "/miner"); 
-                        }catch(RemoteException re){
+                        int portMiner = chose.getPort();
+                        System.out.println("Mi provo a collegare a IP " + ip + " e porta " + portMiner);
+                        try {
+                            m = (MinerInterface) Naming.lookup("//" + ip + ":" + portMiner + "/miner");
+                        } catch (RemoteException re) {
                             re.printStackTrace();
-                            m=null;
-                        }catch(NotBoundException nbe){
+                            m = null;
+                        } catch (NotBoundException nbe) {
                             nbe.printStackTrace();
-                            m=null;
-                        }catch(MalformedURLException mue){
+                            m = null;
+                        } catch (MalformedURLException mue) {
                             mue.printStackTrace();
-                            m=null;
+                            m = null;
                         }
-                        //if i am able to connect, i add to the list
-                        //only condition to add the miner to the list
-                        if(m!=null){
+                        // if i am able to connect, i add to the list
+                        // only condition to add the miner to the list
+                        if (m != null) {
                             chosedMiner.add(m);
                             addressChosedMiner.add(chose);
                         }
-                    }    
-                    //I compute at avery itaration the possible number of miner
-                    numberMiner = Math.min(updatedMinerList.size()-1, numberConnection);
+                    }
+                    // I compute at avery itaration the possible number of miner
+                    numberMiner = Math.min(updatedMinerList.size() - 1, numberConnection);
                 }
 
-                //list with minerInterface is completed
-                if(chosedMiner.size()>0){
-                    synchronized(minersIPList){
+                // list with minerInterface is completed
+                if (chosedMiner.size() > 0) {
+                    synchronized (minersIPList) {
                         minersIPList = chosedMiner;
                     }
-                }    
+                }
 
-                try{
+                try {
                     Thread.sleep(delayTime);
-                }catch(InterruptedException ie){
+                } catch (InterruptedException ie) {
                     ie.printStackTrace();
                 }
-                
+
             }
-            
+
         }
 
     }
@@ -276,71 +292,73 @@ public class Miner implements MinerInterface {
 
         @SuppressWarnings("deprecation")
         public void run() {
-            //while(lista non è vuota)
-            //sincronized
-            //wait
-            //ottengo l'elemento dalla lista delle trnsazioni da inviare
-            //lo cancello dalla lista
-            //esco dal sincronized
-            //con la transazione la verifico
-            //valida se non compare mai nella blockchain, e se il verify delle chiavi private e pubbliche ritorna true
-            //non deve già essere presente nella pending list
-            //se va tutto bene lo mando a tutti
-            //alla fine lo metto nella mia lista
+            // while(lista non è vuota)
+            // sincronized
+            // wait
+            // ottengo l'elemento dalla lista delle trnsazioni da inviare
+            // lo cancello dalla lista
+            // esco dal sincronized
+            // con la transazione la verifico
+            // valida se non compare mai nella blockchain, e se il verify delle chiavi
+            // private e pubbliche ritorna true
+            // non deve già essere presente nella pending list
+            // se va tutto bene lo mando a tutti
+            // alla fine lo metto nella mia lista
 
-            //faccio il notify all per svegliare il miner che dormiva se non c'erano transazioni
-            //se avevo già 4 transazioni pendenti nella pendingTransactions, non rompo il cazzo al miner
-            //se ne avevo di meno devo ristartarlo
-            //ricomincio da capo 
+            // faccio il notify all per svegliare il miner che dormiva se non c'erano
+            // transazioni
+            // se avevo già 4 transazioni pendenti nella pendingTransactions, non rompo il 
+            // azzo al miner
+            // se ne avevo di meno devo ristartarlo
+            // ricomincio da capo
 
-            while(true) {
+            while (true) {
 
                 List<Transaction> tempList = new LinkedList<>();
-                synchronized(transactionToSend) {
-                    while(transactionToSend.isEmpty()) {
+                synchronized (transactionToSend) {
+                    while (transactionToSend.isEmpty()) {
                         try {
                             transactionToSend.wait();
-                        } catch(InterruptedException ie) {
+                        } catch (InterruptedException ie) {
                             ie.printStackTrace();
                             System.exit(1);
                         }
                     }
                     // copy list
-                    while(!transactionToSend.isEmpty()) {
+                    while (!transactionToSend.isEmpty()) {
                         tempList.add(transactionToSend.remove(0));
                     }
                 }
 
-
                 LinkedList<MinerInterface> listMiners = null;
-                synchronized(minersIPList) {
+                synchronized (minersIPList) {
                     // just clone
                     listMiners = new LinkedList<MinerInterface>();
-                    for(MinerInterface mi : minersIPList) {
+                    for (MinerInterface mi : minersIPList) {
                         listMiners.add(mi);
                     }
                 }
 
-                while(!tempList.isEmpty()) {
+                while (!tempList.isEmpty()) {
                     Transaction t = tempList.remove(0);
-                    
-                    if(t.verify() && !pendingTransactions.contains(t) && !blockchain.contains(t)) {
+
+                    if (t.verify() && !pendingTransactions.contains(t) && !blockchain.contains(t)) {
                         // send to every miner
-                        for(MinerInterface mi : listMiners) {
+                        for (MinerInterface mi : listMiners) {
                             try {
                                 mi.sendTransaction(t);
-                            } catch(RemoteException re) {
+                            } catch (RemoteException re) {
                                 re.printStackTrace();
                             }
                         }
 
-                        synchronized(pendingTransactions) {
+                        synchronized (pendingTransactions) {
                             pendingTransactions.add(t);
-                            //pendingTransactions.notifyAll();
+                            // pendingTransactions.notifyAll();
                         }
 
                         // restart miner thread
-                        //@SuppressWarnings("deprecation")
+                        // @SuppressWarnings("deprecation")
                         minerThread.stop();
                         minerThread.start();
 
@@ -361,86 +379,85 @@ public class Miner implements MinerInterface {
 
         @SuppressWarnings("deprecation")
         public void run() {
-            //killa il miner, da vedere se possibile con setDeamond
-            //da vedere semmai se killare il miner solo quando un blocco lo si trova valido
+            // killa il miner, da vedere se possibile con setDeamond
+            // da vedere semmai se killare il miner solo quando un blocco lo si trova valido
 
-            //while(empty)
-            //sincronized
-            //wait
-            //prendo in maniera sincronizzata un solo blocco dalla blocktosend
-            //lo rimuovo dalla lista
-            //effettuo la verifica del blocco
-            //verifica è hash valido, transazioni non esistano da nessuna altra parte e transazioni valide
+            // while(empty)
+            // sincronized
+            // wait
+            // prendo in maniera sincronizzata un solo blocco dalla blocktosend
+            // lo rimuovo dalla lista
+            // effettuo la verifica del blocco
+            // verifica è hash valido, transazioni non esistano da nessuna altra parte e 
+            // ransazioni valide
 
-            //se tutto valido mando il blocco a tutti gli altri
-            //aggiungo in maniera sincronizzata su blockchain il blocco alla mia blockchain
-            //ricomincio da capo
-            //se non c'è niente prima di addormentarmi nell'attesa di qualche nuovo blocco sveglio il miner
-            //mi addormento
+            // se tutto valido mando il blocco a tutti gli altri
+            // aggiungo in maniera sincronizzata su blockchain il blocco alla mia blockchain
+            // ricomincio da capo
+            // se non c'è niente prima di addormentarmi nell'attesa di qualche nuovo blocco 
+            // veglio il miner
+            // mi addormento
 
             minerThread.stop();
 
             List<Block> tempList = new LinkedList<>();
-            synchronized(blockToSend) {
-                while(blockToSend.isEmpty()) {
+            synchronized (blockToSend) {
+                while (blockToSend.isEmpty()) {
                     try {
                         blockToSend.wait();
-                    } catch(InterruptedException ie) {
+                    } catch (InterruptedException ie) {
                         ie.printStackTrace();
                         System.exit(1);
                     }
                     // copy list
-                    while(!blockToSend.isEmpty()) {
+                    while (!blockToSend.isEmpty()) {
                         tempList.add(blockToSend.remove(0));
                     }
                 }
             }
 
             LinkedList<MinerInterface> listMiners = null;
-            synchronized(minersIPList) {
+            synchronized (minersIPList) {
                 // just clone
                 listMiners = new LinkedList<MinerInterface>();
-                for(MinerInterface mi : minersIPList) {
+                for (MinerInterface mi : minersIPList) {
                     listMiners.add(mi);
                 }
             }
 
-            while(!tempList.isEmpty()) {
+            while (!tempList.isEmpty()) {
                 Block b = tempList.remove(0);
-                
-                if(b.verifyBlock(DIFFICULTY) && !blockchain.contains(b)) {
 
-                    for(Transaction t : b.getListTransactions()) {
-                        if(blockchain.contains(t)) {
+                if (b.verifyBlock(DIFFICULTY) && !blockchain.contains(b)) {
+
+                    for (Transaction t : b.getListTransactions()) {
+                        if (blockchain.contains(t)) {
                             continue;
                         }
                     }
-                    
+
                     blockchain.addBlock(b);
 
                     // send to every miner
-                    for(MinerInterface mi : listMiners) {
+                    for (MinerInterface mi : listMiners) {
                         try {
                             mi.sendBlock(b);
-                        } catch(RemoteException re) {
+                        } catch (RemoteException re) {
                             re.printStackTrace();
                         }
                     }
                     /*
-                    synchronized(pendingTransactions) {
-                        pendingTransactions.add(t);
-                        //pendingTransactions.notifyAll();
-                    }
-                    */
+                     * synchronized(pendingTransactions) { pendingTransactions.add(t);
+                     * //pendingTransactions.notifyAll(); }
+                     */
                     // restart miner thread
-                    //@SuppressWarnings("deprecation")
-                    //minerThread.stop();
+                    // @SuppressWarnings("deprecation")
+                    // minerThread.stop();
                     minerThread.start();
 
                 }
 
             }
-
 
         }
 
@@ -454,49 +471,48 @@ public class Miner implements MinerInterface {
         private int difficulty;
         private int numThread;
 
-        public MinerThread(int difficulty, int numThread){
+        public MinerThread(int difficulty, int numThread) {
             this.difficulty = difficulty;
             this.numThread = numThread;
         }
 
         public void run() {
             List<Transaction> actual = new LinkedList<Transaction>();
-            synchronized(pendingTransactions){
-                while(pendingTransactions.isEmpty()){
-                    try{
+            synchronized (pendingTransactions) {
+                while (pendingTransactions.isEmpty()) {
+                    try {
                         wait();
-                    }catch(InterruptedException ie){
+                    } catch (InterruptedException ie) {
                         ie.printStackTrace();
-                    }    
+                    }
                 }
-                //there are at least one transaction
+                // there are at least one transaction
                 Iterator<Transaction> iter = pendingTransactions.iterator();
-                while(iter.hasNext() && actual.size()<4){ //no more than 4 transactions for block                 
+                while (iter.hasNext() && actual.size() < 4) { // no more than 4 transactions for block
                     actual.add(iter.next());
                 }
             }
-            //I will mine this block
+            // I will mine this block
             Block b = new Block();
-            
-            //Iterator through the list of transaction
+
+            // Iterator through the list of transaction
             Iterator<Transaction> iter = actual.iterator();
             while (iter.hasNext()) { // no more than 4 transactions for block
                 b.addTransaction(iter.next());
             }
 
-            //I need to set the previous hash on the block
+            // I need to set the previous hash on the block
             b.setPreviousHash(blockchain.lastBlock().getHash());
 
-            //The block is ready, i can start mining
+            // The block is ready, i can start mining
             b.mineBlock(difficulty, numThread);
 
-            //when I mine the block I can add it to the block to send list
-            synchronized(blockToSend){
+            // when I mine the block I can add it to the block to send list
+            synchronized (blockToSend) {
                 blockToSend.add(b);
             }
         }
 
     }
-
 
 }
