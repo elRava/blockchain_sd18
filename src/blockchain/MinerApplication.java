@@ -69,7 +69,7 @@ public class MinerApplication {
             r.rebind("miner", min);
             // System.setProperty("java.rmi.server.hostname", "192.168.1.224");
             // System.out.println("......." + InetAddress.getLocalHost().getHostAddress());
-            System.out.println("Miner bound at //localhost:" + portMiner + "/miner");
+            System.out.println("Miner bound at //"+Miner.getMyAddress().getHostAddress()+":" + portMiner + "/miner");
             /*
              * if(fromBackup) { System.out.println("Restoring registry from backup");
              * reg.restore(new File(path));
@@ -80,7 +80,7 @@ public class MinerApplication {
             System.exit(1);
         }
 
-        
+
 
         /*
          * int portReg = 7867; String ip = "192.168.1.72";
