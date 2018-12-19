@@ -6,7 +6,10 @@ import java.rmi.server.*;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.Map.*;
 import java.io.*;
+import java.util.concurrent.*;
+
 
 /**
  * Class that defines a distributed registry used by miners to create the p2p
@@ -29,7 +32,7 @@ public class Registry extends UnicastRemoteObject implements RegistryInterface {
      */
     public Registry() throws RemoteException {
         super();
-        reg = new HashMap<>();
+        reg = new ConcurrentHashMap<>();
     }
 
     /**
@@ -87,13 +90,21 @@ public class Registry extends UnicastRemoteObject implements RegistryInterface {
         // synchronize in order to avoid new registrations while cleaning
         synchronized (reg) {
             // may take some time but it's ok
-            Iterator<InetSocketAddress> iter = reg.entrySet().iterator();
-            while (iter.hasNext()) {
-                InetSocketAddress current = iter.next();
-                if (System.currentTimeMillis() > reg.get(current).getTime() + millis) {
-                    reg.remove(current.getKey());
+            for(Map.Entry<InetSocketAddress, Timestamp> e : reg.entrySet()) {
+                if(System.currentTimeMillis() > e.getValue().getTime() + millis) {
+                    reg.remove(e);
                 }
             }
+           
+           /*
+            Iterator<Entry<InetSocketAddress,Timestamp>> iter = reg.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry<InetSocketAddress,Timestamp> current = (Map.Entry) iter.next();
+                if (System.currentTimeMillis() > current.getValue().getTime() + millis) {
+                    iter.remove();
+                }
+            }
+            */
         }
     }
 
