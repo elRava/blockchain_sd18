@@ -223,7 +223,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 // now i want to connect to a fixed number to miner
                 // if i don't know so many address i will connect to all
                 // -1 because we don't want to consider itself, problem if it is the only one
-                int numberMiner = Math.min(updatedMinerList.size(), numberConnection);
+                int numberMiner = Math.min(updatedMinerList.size() -1, numberConnection);
 
                 // random generator
                 Random r = new Random();
@@ -235,7 +235,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
                 // I continue until i reach the target number of connection
                 System.out.println("Attualmente connesso a " + chosedMiner.size() + " Miner");
-                while (chosedMiner.size() < numberMiner) {
+                while (chosedMiner.size() < numberMiner  && updatedMinerList.size()>0) {
+                    
                     System.out.println("Attualmente connesso a " + chosedMiner.size() + " Miner");
                     System.out.println("Possibili miner ancora da testare " + updatedMinerList.size());
                     int find = r.nextInt(updatedMinerList.size());
@@ -290,8 +291,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         System.out.println("Miner totali connessi: " + chosedMiner.size());
                     }
                     // I compute at avery itaration the possible number of miner
-                    
-                    numberMiner = Math.min(updatedMinerList.size() , numberConnection - chosedMiner.size());
+            
+                    //numberMiner = Math.min(updatedMinerList.size() , numberConnection - chosedMiner.size());
                     System.out.println("Number Miner da raggiungere "+numberMiner);
 
                 }
