@@ -80,7 +80,7 @@ public class Registry extends UnicastRemoteObject implements RegistryInterface {
             // may take some time but it's ok
             for(Map.Entry<InetSocketAddress, Timestamp> e : reg.entrySet()) {
                 if(System.currentTimeMillis() > e.getValue().getTime() + millis) {
-                    reg.remove(e);
+                    reg.remove(e.getKey());
                 }
             }
         }

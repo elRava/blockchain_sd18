@@ -10,7 +10,7 @@ import java.util.*;
 import registry.*;
 import java.rmi.server.*;
 
-public class Miner implements MinerInterface {
+public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     public static final int DIFFICULTY = 4;
     public static final int DEFAULT_PORT = 7392;
@@ -245,6 +245,7 @@ public class Miner implements MinerInterface {
                         System.out.println("Mi provo a collegare a IP " + ip + " e porta " + portMiner);
                         try {
                             m = (MinerInterface) Naming.lookup("//" + ip + ":" + portMiner + "/miner");
+                            System.out.println("Collegamento riuscito a IP " + ip + " e porta " + portMiner);
                         } catch (RemoteException re) {
                             re.printStackTrace();
                             m = null;
@@ -261,6 +262,7 @@ public class Miner implements MinerInterface {
                             chosedMiner.add(m);
                             addressChosedMiner.add(chose);
                         }
+                        System.out.println("Miner totali connessi: "+chosedMiner.size());
                     }
                     // I compute at avery itaration the possible number of miner
                     numberMiner = Math.min(updatedMinerList.size() - 1, numberConnection);
