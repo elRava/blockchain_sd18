@@ -10,7 +10,6 @@ import java.util.Map.*;
 import java.io.*;
 import java.util.concurrent.*;
 
-
 /**
  * Class that defines a distributed registry used by miners to create the p2p
  * overlay network. In this class each peer has to find the socket address of
@@ -88,24 +87,31 @@ public class Registry extends UnicastRemoteObject implements RegistryInterface {
      */
     public void clean(long millis) {
         // synchronize in order to avoid new registrations while cleaning
-        synchronized (reg) {
-            // may take some time but it's ok
-            for(Map.Entry<InetSocketAddress, Timestamp> e : reg.entrySet()) {
-                if(System.currentTimeMillis() > e.getValue().getTime() + millis) {
-                    reg.remove(e);
-                }
-            }
-           
-           /*
-            Iterator<Entry<InetSocketAddress,Timestamp>> iter = reg.entrySet().iterator();
-            while (iter.hasNext()) {
-                Map.Entry<InetSocketAddress,Timestamp> current = (Map.Entry) iter.next();
-                if (System.currentTimeMillis() > current.getValue().getTime() + millis) {
-                    iter.remove();
-                }
-            }
-            */
+        // synchronized (reg) {
+        Iterator<Entry<InetSocketAddress, Timestamp>> iter = reg.entrySet().iterator();
+        while(iter.hasNext()){
+            Entry<InetSocketAddress,Timestamp> e = iter.next();
+            if(System.currentTimeMillis() > e.getValue().getTime() + millis) {
+                iter.remove();
+            } 
         }
+    
+
+        // may take some time but it's ok
+        /*
+         * for(Map.Entry<InetSocketAddress, Timestamp> e : reg.entrySet()) {
+         * if(System.currentTimeMillis() > e.getValue().getTime() + millis) {
+         * reg.remove(e); } }
+         */
+
+        /*
+         * Iterator<Entry<InetSocketAddress,Timestamp>> iter =
+         * reg.entrySet().iterator(); while (iter.hasNext()) {
+         * Map.Entry<InetSocketAddress,Timestamp> current = (Map.Entry) iter.next(); if
+         * (System.currentTimeMillis() > current.getValue().getTime() + millis) {
+         * iter.remove(); } }
+         */
+        // }
     }
 
     /**
