@@ -56,6 +56,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         synchronized (transactionToSend) {
             transactionToSend.add(transaction);
             transactionToSend.notifyAll();
+            System.out.println("Transazione ricevuta");
             // delega tutti i controlli e le verifiche al thread che aggiunge le transazioni
             // e le manda a tutti
         }
@@ -246,7 +247,6 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     int find = r.nextInt(updatedMinerList.size());
                     InetSocketAddress chose = updatedMinerList.get(find);
                     updatedMinerList.remove(find);
-
                     if (chose.getAddress().getHostAddress().equals(Miner.getMyAddress().getHostAddress())
                             && chose.getPort() == myPort) {
                         // System.out.println("Ho rimosso il mio");
