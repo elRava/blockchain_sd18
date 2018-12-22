@@ -27,7 +27,7 @@ public class MinerApplication {
     public static void main(String[] args) {
         // -p port -b backup
 
-        System.out.println("Registry application started");
+        System.out.println("Miner application started");
 
 
         final int DEFAULT_PORT_REG = 7867;

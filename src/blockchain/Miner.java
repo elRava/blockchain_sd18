@@ -56,7 +56,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         synchronized (transactionToSend) {
             transactionToSend.add(transaction);
             transactionToSend.notifyAll();
-            System.out.println("Transazione ricevuta " + Block.hashToString(transaction.getHash()));
+            //System.out.println("Transazione ricevuta " + Block.hashToString(transaction.getHash()));
             // delega tutti i controlli e le verifiche al thread che aggiunge le transazioni
             // e le manda a tutti
         }
@@ -397,6 +397,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
                         // restart miner thread
                         // @SuppressWarnings("deprecation")
+                        
                         minerThread.stop();
                         minerThread.start();
 
