@@ -103,7 +103,7 @@ public class TestClient {
         // now i want to connect to a fixed number to miner
         // if i don't know so many address i will connect to all
         // -1 because we don't want to consider itself, problem if it is the only one
-        int numberMiner = Math.min(updatedMinerList.size() - 1, numberConnection);
+        int numberMiner = Math.min(updatedMinerList.size(), numberConnection);
 
         // random generator
         Random r = new Random();
@@ -145,6 +145,7 @@ public class TestClient {
                 }
             }
             if (valid) {
+                System.out.println("valid? " + valid);
                 // I create the reference to the remote object, if it is possible
                 MinerInterface m = null;
                 String ip = chose.getAddress().getHostAddress();
@@ -237,6 +238,7 @@ public class TestClient {
         System.out.println("Creo b1");
 
         Transaction t1 = new Transaction(5, pubAlice, pubBob);
+        t1.sign(priAlice);
 
         for (MinerInterface m : chosedMiner) {
             try{

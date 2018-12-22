@@ -56,7 +56,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         synchronized (transactionToSend) {
             transactionToSend.add(transaction);
             transactionToSend.notifyAll();
-            System.out.println("Transazione ricevuta");
+            System.out.println("Transazione ricevuta " + Block.hashToString(transaction.getHash()));
             // delega tutti i controlli e le verifiche al thread che aggiunge le transazioni
             // e le manda a tutti
         }
@@ -86,10 +86,10 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
         updateRegistry = new Thread(new UpdateRegistry(20000, 10));
         updateRegistry.start();
-        /*
-         * transactionsThread = new Thread(new TransactionsThread());
-         * transactionsThread.start();
-         * 
+        
+        transactionsThread = new Thread(new TransactionsThread());
+        transactionsThread.start();
+        /* 
          * blocksThread = new Thread(new BlocksThread()); blocksThread.start();
          * 
          * minerThread = new Thread(new MinerThread(3,3)); minerThread.start();
@@ -375,8 +375,11 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 }
 
                 while (!tempList.isEmpty()) {
+                    
                     Transaction t = tempList.remove(0);
-
+                    
+                    System.out.println("Transaction received: " + Block.hashToString(t.getHash()));
+                    
                     if (t.verify() && !pendingTransactions.contains(t) && !blockchain.contains(t)) {
                         // send to every miner
                         for (MinerInterface mi : listMiners) {
