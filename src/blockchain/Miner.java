@@ -85,15 +85,16 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     public void startThreads() {
 
         updateRegistry = new Thread(new UpdateRegistry(20000, 10));
-        updateRegistry.start();
-        
         transactionsThread = new Thread(new TransactionsThread());
+        blocksThread = new Thread(new BlocksThread());
+        minerThread = new Thread(new MinerThread(3,3));
+
+
+        updateRegistry.start();
         transactionsThread.start();
-        /* 
-         * blocksThread = new Thread(new BlocksThread()); blocksThread.start();
-         * 
-         * minerThread = new Thread(new MinerThread(3,3)); minerThread.start();
-         */
+        blocksThread.start();
+        //minerThread.start();
+        
     }
 
     private void chooseBlockchain() {
@@ -155,6 +156,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     }
 
+
     public static InetAddress getMyAddress() {
         Enumeration e = null;
         try {
@@ -176,6 +178,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         return null;
 
     }
+
 
     // thread che aggiorna registro
     private class UpdateRegistry implements Runnable {
@@ -320,6 +323,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     }
 
+
     /**
      * thread che pensa alle transazioni
      */
@@ -411,6 +415,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     }
 
+
     /**
      * thread che pensa ai blocchi
      */
@@ -437,65 +442,77 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
             // veglio il miner
             // mi addormento
 
-            minerThread.stop();
+            while(true) {
 
-            List<Block> tempList = new LinkedList<>();
-            synchronized (blockToSend) {
-                while (blockToSend.isEmpty()) {
-                    try {
-                        blockToSend.wait();
-                    } catch (InterruptedException ie) {
-                        ie.printStackTrace();
-                        System.exit(1);
+                List<Block> tempList = new LinkedList<>();
+                synchronized (blockToSend) {
+                    while (blockToSend.isEmpty()) {
+                        try {
+                            //System.out.println("wait");
+                            blockToSend.wait();
+                        } catch (InterruptedException ie) {
+                            ie.printStackTrace();
+                            System.exit(1);
+                        }
                     }
+                    //System.out.println("wake up");
+                    // block arrived, stop mining!
+                    minerThread.stop();
+
                     // copy list
                     while (!blockToSend.isEmpty()) {
-                        tempList.add(blockToSend.remove(0));
+                        Block b = blockToSend.remove(0);
+                        tempList.add(b);
+                        System.out.println("Block received: " + Block.hashToString(b.getHash()));
                     }
                 }
-            }
 
-            LinkedList<MinerInterface> listMiners = null;
-            synchronized (minersIPList) {
-                // just clone
-                listMiners = new LinkedList<MinerInterface>();
-                for (MinerInterface mi : minersIPList) {
-                    listMiners.add(mi);
+                LinkedList<MinerInterface> listMiners = null;
+                synchronized (minersIPList) {
+                    // just clone
+                    listMiners = new LinkedList<MinerInterface>();
+                    for (MinerInterface mi : minersIPList) {
+                        listMiners.add(mi);
+                    }
                 }
-            }
 
-            while (!tempList.isEmpty()) {
-                Block b = tempList.remove(0);
+                while (!tempList.isEmpty()) {
+                    Block b = tempList.remove(0);
 
-                if (b.verifyBlock(DIFFICULTY) && !blockchain.contains(b)) {
+                    //System.out.println("Block hash: " + Block.hashToString(b.getHash()));
+                    //System.out.println("Previous Block hash: " + Block.hashToString(b.getPreviousHash()));
 
-                    for (Transaction t : b.getListTransactions()) {
-                        if (blockchain.contains(t)) {
-                            continue;
+                    if (b.verifyBlock(DIFFICULTY) && !blockchain.contains(b)) {
+
+                        for (Transaction t : b.getListTransactions()) {
+                            if (blockchain.contains(t)) {
+                                continue;
+                            }
                         }
-                    }
 
-                    blockchain.addBlock(b);
+                        blockchain.addBlock(b);
+                        
+                        System.out.println("Blockchain hash: " + Block.hashToString(blockchain.getHash()));
 
-                    // send to every miner
-                    for (MinerInterface mi : listMiners) {
-                        try {
-                            mi.sendBlock(b);
-                        } catch (RemoteException re) {
-                            re.printStackTrace();
+                        // send to every miner
+                        for (MinerInterface mi : listMiners) {
+                            try {
+                                mi.sendBlock(b);
+                            } catch (RemoteException re) {
+                                re.printStackTrace();
+                            }
                         }
+                    
                     }
-                    /*
-                     * synchronized(pendingTransactions) { pendingTransactions.add(t);
-                     * //pendingTransactions.notifyAll(); }
-                     */
-                    // restart miner thread
-                    // @SuppressWarnings("deprecation")
-                    // minerThread.stop();
+                }
+                
+                // TODO: does not work well, look after minerThread debug
+                try {
                     minerThread.start();
-
+                } catch(IllegalThreadStateException itse) {
+                    itse.printStackTrace();
+                    continue;
                 }
-
             }
 
         }
