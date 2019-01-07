@@ -40,7 +40,7 @@ public class Block implements Serializable {
         previousHash = null;
         hash = null;
         //nonce = null;
-        tempNonce = new AtomicLong();
+        tempNonce = new AtomicLong((new Random()).nextLong());
         isMined = new AtomicBoolean(false);
         merkleRoot = null;
         minedTime = null;
