@@ -237,21 +237,19 @@ public class TestClient {
         Transaction t1 = new Transaction(5, pubAlice, pubBob);
         t1.sign(priAlice);
 
-
         // test block thread
-        Block b = new Block();
-        b.addTransaction(t1);
-        b.setPreviousHash(new Block().genesisBlock().getHash());
-        b.mineBlock(4, 4);
+        //Block b = new Block();
+        //b.addTransaction(t1);
+        //b.setPreviousHash(new Block().genesisBlock().getHash());
+        //b.mineBlock(4, 4);
 
         for (MinerInterface m : chosedMiner) {
-            try{
-                //m.sendTransaction(t1);
-                m.sendBlock(b);
-            }catch(RemoteException re){
+            try {
+                m.sendTransaction(t1);
+                //m.sendBlock(b);
+            } catch (RemoteException re) {
                 System.out.println("Errore re");
             }
-            
         }
 
     }
