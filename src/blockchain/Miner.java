@@ -392,7 +392,9 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         }
 
                         synchronized (pendingTransactions) {
-                            pendingTransactions.add(t);
+                            if(!pendingTransactions.contains(t)) {
+                                pendingTransactions.add(t);
+                            }
                             // pendingTransactions.notifyAll();
                         }
 
@@ -492,8 +494,17 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
                         blockchain.addBlock(b);
 
+                        // remove block's transaction from pending transactions
+                        synchronized(pendingTransactions) {
+                            for(Transaction t : b.getListTransactions()) {
+                                // if not present does nothing
+                                pendingTransactions.remove(t);
+                            }
+                        }
+
                         System.out.println("Blockchain hash: " + Block.hashToString(blockchain.getHash()));
                         System.out.println("Blockchain length: " + blockchain.length());
+                        System.out.println("Blockchain last block: " + Block.hashToString(blockchain.lastBlock().getHash()));
 
                         // send to every miner
                         for (MinerInterface mi : listMiners) {
@@ -585,18 +596,19 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 b.mineBlock(difficulty, numThread);
                 System.out.println("fine mining, hash blocco: " + Block.hashToString(b.getHash()));
 
+                // clean used transactions
+                synchronized(pendingTransactions) {
+                    for(int i = 0; i < b.getListTransactions().size(); i++) {
+                        System.out.println("removed transaction");
+                        pendingTransactions.remove(0);
+                    }
+                }
+
                 // when I mine the block I can add it to the block to send list
                 synchronized (blockToSend) {
                     blockToSend.add(b);
                     blockToSend.notifyAll();
                 }
-
-                // clean used transactions
-                for(int i = 0; i < b.getListTransactions().size(); i++) {
-                    System.out.println("removed transaction");
-                    pendingTransactions.remove(0);
-                }
-
 
             //}
         }

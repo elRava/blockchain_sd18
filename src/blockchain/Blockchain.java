@@ -124,12 +124,10 @@ public class Blockchain implements Serializable {
     }
 
     public byte[] getHash() {
-        if (this.hash == null) {
-            computeHash();
-        }
+
+        computeHash();
         return this.hash;
     }
-    
 
     public int length() {
         return last.depth;
