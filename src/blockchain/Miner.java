@@ -392,7 +392,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         }
 
                         synchronized (pendingTransactions) {
-                            if(!pendingTransactions.contains(t)) {
+                            if (!pendingTransactions.contains(t)) {
                                 pendingTransactions.add(t);
                             }
                             // pendingTransactions.notifyAll();
@@ -402,10 +402,9 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         // @SuppressWarnings("deprecation")
 
                         minerThread.stop();
-                        //minerThread.start();
+                        // minerThread.start();
                         minerThread = new Thread(new MinerThread(DIFFICULTY, 3));
                         minerThread.start();
-
 
                     }
 
@@ -494,9 +493,9 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
                         blockchain.addBlock(b);
 
-                        // remove block's transaction from pending transactions
-                        synchronized(pendingTransactions) {
-                            for(Transaction t : b.getListTransactions()) {
+                        // remove block's transactions from pending transactions
+                        synchronized (pendingTransactions) {
+                            for (Transaction t : b.getListTransactions()) {
                                 // if not present does nothing
                                 pendingTransactions.remove(t);
                             }
@@ -504,7 +503,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
                         System.out.println("Blockchain hash: " + Block.hashToString(blockchain.getHash()));
                         System.out.println("Blockchain length: " + blockchain.length());
-                        System.out.println("Blockchain last block: " + Block.hashToString(blockchain.lastBlock().getHash()));
+                        System.out.println(
+                                "Blockchain last block: " + Block.hashToString(blockchain.lastBlock().getHash()));
 
                         // send to every miner
                         for (MinerInterface mi : listMiners) {
@@ -520,7 +520,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
                 // TODO: does not work well, look after minerThread debug
                 try {
-                    //minerThread.start();
+                    // minerThread.start();
                     minerThread = new Thread(new MinerThread(DIFFICULTY, 3));
                     minerThread.start();
                 } catch (IllegalThreadStateException itse) {
@@ -550,67 +550,67 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
             System.out.println("Miner Thread start");
 
-            //while(true) {
+            // while(true) {
 
-                List<Transaction> actual = new LinkedList<Transaction>();
-                synchronized (pendingTransactions) {
-                    while (pendingTransactions.isEmpty()) {
-                        try {
-                            System.out.println("dorme num Transact: " + pendingTransactions.size());
-                            pendingTransactions.wait();
-                        } catch (InterruptedException ie) {
-                            ie.printStackTrace();
-                        }
-                    }
-                    System.out.println("sveglio num Transact: " + pendingTransactions.size());
-
-                    // there are at least one transaction
-                    Iterator<Transaction> iter = pendingTransactions.iterator();
-                    while (iter.hasNext() && actual.size() < 4) { // no more than 4 transactions for block
-                        Transaction t = iter.next();
-                        if(t.verify() && !blockchain.contains(t)) {
-                            System.out.println("Aggiunta transazione a lista");
-                            actual.add(t);
-                        } else {
-                            iter.remove();
-                        }
+            List<Transaction> actual = new LinkedList<Transaction>();
+            synchronized (pendingTransactions) {
+                while (pendingTransactions.isEmpty()) {
+                    try {
+                        System.out.println("dorme num Transact: " + pendingTransactions.size());
+                        pendingTransactions.wait();
+                    } catch (InterruptedException ie) {
+                        ie.printStackTrace();
                     }
                 }
-                // I will mine this block
-                Block b = new Block();
+                System.out.println("sveglio num Transact: " + pendingTransactions.size());
 
-                // Iterator through the list of transaction
-                Iterator<Transaction> iter = actual.iterator();
-                while (iter.hasNext()) { // no more than 4 transactions for block
-                    System.out.println("Aggiunta transazione a blocco");
-                    b.addTransaction(iter.next());
-                }
-
-                System.out.println("lista blocco size: " + b.getListTransactions().size());
-
-                // I need to set the previous hash on the block
-                b.setPreviousHash(blockchain.lastBlock().getHash());
-
-                System.out.println("inizia mining");
-                // The block is ready, i can start mining
-                b.mineBlock(difficulty, numThread);
-                System.out.println("fine mining, hash blocco: " + Block.hashToString(b.getHash()));
-
-                // clean used transactions
-                synchronized(pendingTransactions) {
-                    for(int i = 0; i < b.getListTransactions().size(); i++) {
-                        System.out.println("removed transaction");
-                        pendingTransactions.remove(0);
+                // there are at least one transaction
+                Iterator<Transaction> iter = pendingTransactions.iterator();
+                while (iter.hasNext() && actual.size() < 4) { // no more than 4 transactions for block
+                    Transaction t = iter.next();
+                    if (t.verify() && !blockchain.contains(t)) {
+                        System.out.println("Aggiunta transazione a lista");
+                        actual.add(t);
+                    } else {
+                        iter.remove();
                     }
                 }
+            }
+            // I will mine this block
+            Block b = new Block();
 
-                // when I mine the block I can add it to the block to send list
-                synchronized (blockToSend) {
-                    blockToSend.add(b);
-                    blockToSend.notifyAll();
+            // Iterator through the list of transaction
+            Iterator<Transaction> iter = actual.iterator();
+            while (iter.hasNext()) { // no more than 4 transactions for block
+                System.out.println("Aggiunta transazione a blocco");
+                b.addTransaction(iter.next());
+            }
+
+            System.out.println("lista blocco size: " + b.getListTransactions().size());
+
+            // I need to set the previous hash on the block
+            b.setPreviousHash(blockchain.lastBlock().getHash());
+
+            System.out.println("inizia mining");
+            // The block is ready, i can start mining
+            b.mineBlock(difficulty, numThread);
+            System.out.println("fine mining, hash blocco: " + Block.hashToString(b.getHash()));
+
+            // clean used transactions
+            synchronized (pendingTransactions) {
+                for (int i = 0; i < b.getListTransactions().size(); i++) {
+                    System.out.println("removed transaction");
+                    pendingTransactions.remove(0);
                 }
+            }
 
-            //}
+            // when I mine the block I can add it to the block to send list
+            synchronized (blockToSend) {
+                blockToSend.add(b);
+                blockToSend.notifyAll();
+            }
+
+            // }
         }
 
     }
