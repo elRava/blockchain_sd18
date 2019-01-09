@@ -41,6 +41,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     private int numberMinerThread;
 
+    private boolean firstConnection = true;
+
     public Miner() throws RemoteException {
         super();
         transactionToSend = new LinkedList<Transaction>();
@@ -50,7 +52,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         registryList = new LinkedList<>();
         minersIPList = new LinkedList<>();
         blockchain = new Blockchain();
-        chooseBlockchain();
+        //chooseBlockchain();
         myPort = DEFAULT_PORT;
 
         numberMinerThread = DEFAULT_MINER_THREAD;
@@ -125,6 +127,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     }
                 }
             }
+            System.out.println("Ho preso "+listHash+" di possibili blockchain");
 
             // I need to find which blockchain is the most frequent
             Map<byte[], Integer> map = new HashMap<byte[], Integer>();
@@ -142,6 +145,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
             Set<byte[]> setByte = map.keySet();
 
+            System.out.println("Ho "+setByte.size()+" possibili scelte di hash della blockchain");
+
             if (setByte.isEmpty()) {
                 return;
             }
@@ -156,6 +161,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     occ = map.get(current);
                 }
             }
+            System.out.println("Hash vincitore is "+Block.hashToString(longer)+" che è stato trovato "+occ+" volte");
+            
 
             // i find the hash of the blockchain
             synchronized (minersIPList) {
@@ -165,6 +172,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     try {
                         if (Arrays.equals(currentMiner.getBlockchain().getHash(), longer)) {
                             // synchronized (blockchain) {
+                            System.out.println("Ho trovato il miner da cui scaricare la blockchain, inizio il download");    
                             blockchain = currentMiner.getBlockchain();
                             break;
                             // }
@@ -174,6 +182,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     }
                 }
             }
+            System.out.println("Blockchain è aggiornata, rilascio il synchronized");
         }
 
     }
@@ -330,6 +339,11 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         minersIPList = chosedMiner;
                     }
                 }
+
+                if(firstConnection){
+                    chooseBlockchain();
+                    firstConnection = false;
+                }  
 
                 try {
                     Thread.sleep(delayTime);
@@ -539,7 +553,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             String h = new SimpleDateFormat("yyyyMMddhhmmss").format(date);
                             
                             
-                            blockchain.print("blockchain/print/" + h + ".txt");
+                            blockchain.print("blockchain/print/M"+myPort+"_"+ h + ".txt");
                         }
                     }
                     if (valid) {
