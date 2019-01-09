@@ -12,6 +12,7 @@ public class Blockchain implements Serializable {
 
     private Ring last;
     private byte[] hash;
+    private Ring first;
 
     /**
      * Constructor of the blockchain It creates the genesis block at the beginning
@@ -23,7 +24,11 @@ public class Blockchain implements Serializable {
         // it is the only block with father set to null and depth set to 0
         Ring firstBlock = new Ring(genesis);
         this.last = firstBlock;
+        this.first = firstBlock;
     }
+
+    
+
 
     /**
      * Method used to add a mined block on the blockchain It will be insert
@@ -92,10 +97,15 @@ public class Blockchain implements Serializable {
     }
 
     public boolean contains(Block block) {
-        Iterator it = this.getIterator();
-        while (it.hasNext()) {
-            if (it.next().equals(block)) {
+        LinkedList<Ring> queue = new LinkedList<>();
+        queue.add(first);
+        while(!queue.isEmpty()){
+            Ring current = queue.get(0);
+            if(current.block.equals(block)){
                 return true;
+            }
+            for(Ring r: current.sons){
+                queue.add(r);
             }
         }
         return false;
