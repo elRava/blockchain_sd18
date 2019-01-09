@@ -169,7 +169,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 }
             }
             System.out.println(
-                    "Hash vincitore is " + Block.hashToString(longer) + " che è stato trovato "+   max + "  volte");
+                    "Hash vincitore is " + Block.hashToString(longer) + " che si trova "+   max + "  volte");
             System.out.println("Inizio il download");
             try{
                 blockchain = bestMiner.getBlockchain();
@@ -554,7 +554,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     }
                 }
                 System.out.println("Temp list " + tempList.size());
-                
+
                 while (!tempList.isEmpty()) {
                     Block b = tempList.remove(0);
 
@@ -736,7 +736,27 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 }
 
                 // chiedi tutti blocchi a partire dall'ultimo che ho e inseriscili in testa a blocktosend
+                // ocio deadlock!!!!!!
+                //synchronized(minersIPList) {
+                    synchronized(blockToSend) {
 
+                        for(MinerInterface miner : minersIPList) {
+                            LinkedList<Block> blockList = new LinkedList<>();
+                            try {
+                                blockList = miner.getBlocksGivenLength(blockchain.length());
+                            } catch(RemoteException re) {
+                                re.printStackTrace();
+                                System.exit(1);
+                            }
+    
+                            while(!blockList.isEmpty()) {
+                                ((LinkedList<Block>) blockToSend).addFirst(blockList.removeLast());
+                            }
+    
+                        }
+    
+                    }
+                //}
 
 
 

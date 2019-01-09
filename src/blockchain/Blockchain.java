@@ -27,6 +27,17 @@ public class Blockchain implements Serializable {
         this.first = firstBlock;
     }
 
+    public LinkedList<Block> getFromDepth(int depth){
+        LinkedList<Block> missingBlock = new LinkedList<>();
+        int currentLength = last.depth;
+        Ring currentRing = last;
+        while(currentLength>=depth){
+            missingBlock.add(currentRing.block);
+            currentRing = currentRing.father;
+            currentLength = currentRing.depth;
+        }
+        return missingBlock;
+    }
     
 
 
@@ -56,6 +67,10 @@ public class Blockchain implements Serializable {
 
             // Normally the block will be linked to the last block added to the blockchain
             if (!Arrays.equals(target, current.block.getHash())) { // If it's not..
+                //If i looking for same sibling of the genesis, previous is not in the blockchain
+                if(current.father == null){
+                    return false;
+                }        
                 // I get the list of my siblings
                 if(current.father == null) {
                     return false;
@@ -137,7 +152,6 @@ public class Blockchain implements Serializable {
     }
 
     public byte[] getHash() {
-
         computeHash();
         return this.hash;
     }
@@ -225,8 +239,8 @@ public class Blockchain implements Serializable {
         return new BlockchainIterator();
     }
 
-    public void print(String path) {
 
+    public void print(String path) {
         PrintStream write = null;
         // FileOutputStream f = null;
         try {
@@ -241,9 +255,11 @@ public class Blockchain implements Serializable {
                 String s = "";
                 s += "b_" + depth + ": " + Block.hashToString(b.getHash()) + " - ";
                 depth--;
-                for (int i = 0; i < b.getListTransactions().size(); i++) {
+                for (int i = 0; i < b.getListTransactions().size()-1; i++) {
                     s += "t" + i + ": " + Block.hashToString(b.getListTransactions().get(i).getHash()) + ", ";
                 }
+                int lastIndex = b.getListTransactions().size()-1;
+                s += "t" + lastIndex + ": " + Block.hashToString(b.getListTransactions().get(lastIndex).getHash());
                 write.println(s);
             }
 
