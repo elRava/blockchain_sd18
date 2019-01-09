@@ -57,6 +57,9 @@ public class Blockchain implements Serializable {
             // Normally the block will be linked to the last block added to the blockchain
             if (!Arrays.equals(target, current.block.getHash())) { // If it's not..
                 // I get the list of my siblings
+                if(current.father == null) {
+                    return false;
+                }
                 List<Ring> sibling = current.getSiblings();
                 // I search recursively in all the subtree with the sibling as root
                 // It is more probable to find there instead of looking deeper
