@@ -47,9 +47,10 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         // pendingBlock = new LinkedList<>();
         registryList = new LinkedList<>();
         minersIPList = new LinkedList<>();
-        // chooseBlockchain(list)
-        myPort = DEFAULT_PORT;
         blockchain = new Blockchain();
+        chooseBlockchain();
+        myPort = DEFAULT_PORT;
+
         numberMinerThread = DEFAULT_MINER_THREAD;
     }
 
@@ -110,58 +111,60 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     }
 
     private void chooseBlockchain() {
-        List<byte[]> listHash = new LinkedList<byte[]>();
-        synchronized (minersIPList) {
-            Iterator<MinerInterface> iterMiner = minersIPList.iterator();
-            while (iterMiner.hasNext()) {
-                try {
-                    listHash.add(iterMiner.next().getBlockchain().getHash());
-                } catch (RemoteException re) {
-                    re.printStackTrace();
+        synchronized (blockchain) {
+            List<byte[]> listHash = new LinkedList<byte[]>();
+            synchronized (minersIPList) {
+                Iterator<MinerInterface> iterMiner = minersIPList.iterator();
+                while (iterMiner.hasNext()) {
+                    try {
+                        listHash.add(iterMiner.next().getBlockchain().getHash());
+                    } catch (RemoteException re) {
+                        re.printStackTrace();
+                    }
                 }
             }
-        }
 
-        // I need to find which blockchain is the most frequent
-        Map<byte[], Integer> map = new HashMap<byte[], Integer>();
-        Iterator<byte[]> iterByte = listHash.iterator();
-        while (iterByte.hasNext()) {
-            byte[] current = iterByte.next();
-            if (!map.containsKey(current)) {
-                map.put(current, 1);
-            } else {
-                int previousOccurance = map.get(current);
-                previousOccurance++;
-                map.put(current, previousOccurance);
+            // I need to find which blockchain is the most frequent
+            Map<byte[], Integer> map = new HashMap<byte[], Integer>();
+            Iterator<byte[]> iterByte = listHash.iterator();
+            while (iterByte.hasNext()) {
+                byte[] current = iterByte.next();
+                if (!map.containsKey(current)) {
+                    map.put(current, 1);
+                } else {
+                    int previousOccurance = map.get(current);
+                    previousOccurance++;
+                    map.put(current, previousOccurance);
+                }
             }
-        }
 
-        Set<byte[]> setByte = map.keySet();
-        Iterator<byte[]> occurance = setByte.iterator();
-        byte[] longer = occurance.next();
-        int occ = map.get(longer);
-        while (occurance.hasNext()) {
-            byte[] current = occurance.next();
-            if (map.get(current) > occ) {
-                longer = current;
-                occ = map.get(current);
+            Set<byte[]> setByte = map.keySet();
+            Iterator<byte[]> occurance = setByte.iterator();
+            byte[] longer = occurance.next();
+            int occ = map.get(longer);
+            while (occurance.hasNext()) {
+                byte[] current = occurance.next();
+                if (map.get(current) > occ) {
+                    longer = current;
+                    occ = map.get(current);
+                }
             }
-        }
 
-        // i find the hash of the blockchain
-        synchronized (minersIPList) {
-            Iterator<MinerInterface> minerIter = minersIPList.iterator();
-            while (minerIter.hasNext()) {
-                MinerInterface currentMiner = minerIter.next();
-                try {
-                    if (Arrays.equals(currentMiner.getBlockchain().getHash(), longer)) {
-                        synchronized (blockchain) {
+            // i find the hash of the blockchain
+            synchronized (minersIPList) {
+                Iterator<MinerInterface> minerIter = minersIPList.iterator();
+                while (minerIter.hasNext()) {
+                    MinerInterface currentMiner = minerIter.next();
+                    try {
+                        if (Arrays.equals(currentMiner.getBlockchain().getHash(), longer)) {
+                            // synchronized (blockchain) {
                             blockchain = currentMiner.getBlockchain();
                             break;
+                            // }
                         }
+                    } catch (RemoteException re) {
+                        re.printStackTrace();
                     }
-                } catch (RemoteException re) {
-                    re.printStackTrace();
                 }
             }
         }
@@ -393,6 +396,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
                     System.out.println("Transaction received: " + Block.hashToString(t.getHash()));
 
+                    // possibile errore è blockchain contains quando sta ancora facendo
+                    // choseBlockchain
                     if (t.verify() && !pendingTransactions.contains(t) && !blockchain.contains(t)) {
                         // send to every miner
                         for (MinerInterface mi : listMiners) {
@@ -470,6 +475,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     }
                     // System.out.println("wake up");
                     // block arrived, stop mining!
+
                     minerThread.stop();
 
                     // copy list
@@ -495,30 +501,33 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     // System.out.println("Block hash: " + Block.hashToString(b.getHash()));
                     // System.out.println("Previous Block hash: " +
                     // Block.hashToString(b.getPreviousHash()));
-
-                    if (b.verifyBlock(DIFFICULTY) && !blockchain.contains(b)) {
-
-                        for (Transaction t : b.getListTransactions()) {
-                            if (blockchain.contains(t)) {
-                                continue;
-                            }
-                        }
-
-                        blockchain.addBlock(b);
-
-                        // remove block's transactions from pending transactions
-                        synchronized (pendingTransactions) {
+                    boolean valid = false;
+                    synchronized (blockchain) {
+                        if (b.verifyBlock(DIFFICULTY) && !blockchain.contains(b)) {
+                            valid = true;
                             for (Transaction t : b.getListTransactions()) {
-                                // if not present does nothing
-                                pendingTransactions.remove(t);
+                                if (blockchain.contains(t)) {
+                                    continue;
+                                }
                             }
+
+                            blockchain.addBlock(b);
+
+                            // remove block's transaction from pending transactions
+                            synchronized (pendingTransactions) {
+                                for (Transaction t : b.getListTransactions()) {
+                                    // if not present does nothing
+                                    pendingTransactions.remove(t);
+                                }
+                            }
+
+                            System.out.println("Blockchain hash: " + Block.hashToString(blockchain.getHash()));
+                            System.out.println("Blockchain length: " + blockchain.length());
+                            System.out.println(
+                                    "Blockchain last block: " + Block.hashToString(blockchain.lastBlock().getHash()));
                         }
-
-                        System.out.println("Blockchain hash: " + Block.hashToString(blockchain.getHash()));
-                        System.out.println("Blockchain length: " + blockchain.length());
-                        System.out.println(
-                                "Blockchain last block: " + Block.hashToString(blockchain.lastBlock().getHash()));
-
+                    }
+                    if (valid) {
                         // send to every miner
                         for (MinerInterface mi : listMiners) {
                             try {
@@ -527,7 +536,6 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                                 re.printStackTrace();
                             }
                         }
-
                     }
                 }
 
@@ -586,11 +594,13 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         System.out.println("Aggiunta transazione a lista");
                         actual.add(t);
                     } else {
+                        System.out.println("Transazione eliminata");
                         iter.remove();
                     }
                 }
             }
             // I will mine this block
+
             Block b = new Block();
 
             // Iterator through the list of transaction
@@ -608,7 +618,9 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
             System.out.println("inizia mining");
             // The block is ready, i can start mining
             b.mineBlock(difficulty, numThread);
-            System.out.println("fine mining, hash blocco: " + Block.hashToString(b.getHash()));
+
+            System.out.println("##### WINNER #####");
+            System.out.println("Hash blocco: " + Block.hashToString(b.getHash()));
 
             // clean used transactions
             synchronized (pendingTransactions) {
@@ -623,6 +635,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 blockToSend.add(b);
                 blockToSend.notifyAll();
             }
+
+            b = null;
 
             // }
         }
