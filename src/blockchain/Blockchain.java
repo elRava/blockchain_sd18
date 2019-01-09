@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.*;
-import java.io.Serializable;
+import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -210,6 +210,35 @@ public class Blockchain implements Serializable {
      */
     public Iterator<Block> getIterator() {
         return new BlockchainIterator();
+    }
+
+    public void print(String path) {
+
+        PrintStream write = null;
+        // FileOutputStream f = null;
+        try {
+            File print = new File(path);
+            print.createNewFile();
+            write = new PrintStream(print);
+            Iterator<Block> iter = this.getIterator();
+            System.out.println("Print Blockchain");
+            int depth = this.length();
+            while (iter.hasNext()) {
+                Block b = iter.next();
+                String s = "";
+                s += "b_" + depth + ": " + Block.hashToString(b.getHash()) + " - ";
+                depth--;
+                for (int i = 0; i < b.getListTransactions().size(); i++) {
+                    s += "t" + i + ": " + Block.hashToString(b.getListTransactions().get(i).getHash()) + ", ";
+                }
+                write.println(s);
+            }
+            
+            write.close();
+        } catch (IOException e) {
+            System.out.println("Error: " + e);
+            // System.exit(1);
+        }
     }
 
     private class BlockchainIterator implements Iterator<Block> {

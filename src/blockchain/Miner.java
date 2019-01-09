@@ -11,6 +11,8 @@ import java.util.*;
 import java.net.*;
 import registry.*;
 import java.rmi.server.*;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 
 public class Miner extends UnicastRemoteObject implements MinerInterface {
 
@@ -139,6 +141,11 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
             }
 
             Set<byte[]> setByte = map.keySet();
+
+            if (setByte.isEmpty()) {
+                return;
+            }
+
             Iterator<byte[]> occurance = setByte.iterator();
             byte[] longer = occurance.next();
             int occ = map.get(longer);
@@ -525,6 +532,13 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             System.out.println("Blockchain length: " + blockchain.length());
                             System.out.println(
                                     "Blockchain last block: " + Block.hashToString(blockchain.lastBlock().getHash()));
+                            Timestamp t = new Timestamp(System.currentTimeMillis());
+                            Date date = new Date();
+                            date.setTime(t.getTime());
+                            String h = new SimpleDateFormat("yyyyMMddhhmmss").format(date);
+                            
+                            
+                            blockchain.print("blockchain/print/" + h + ".txt");
                         }
                     }
                     if (valid) {
