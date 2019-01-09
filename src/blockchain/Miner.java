@@ -61,7 +61,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         numberMinerThread = DEFAULT_MINER_THREAD;
     }
 
-    public LinkedList<Block> getBLockGivenLength(int depth) throws RemoteException{
+    public LinkedList<Block> getBlocksGivenLength(int depth) throws RemoteException{
         return blockchain.getFromDepth(depth);
     }
     
