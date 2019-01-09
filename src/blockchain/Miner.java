@@ -16,6 +16,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     public static final int DIFFICULTY = 6;
     public static final int DEFAULT_PORT = 7392;
+    public static final int DEFAULT_MINER_THREAD = 1;
+    public static final int TRANSACTIONS_PER_BLOCK = 4;
 
     private Blockchain blockchain;
 
@@ -35,6 +37,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     private int myPort;
 
+    private int numberMinerThread;
+
     public Miner() throws RemoteException {
         super();
         transactionToSend = new LinkedList<Transaction>();
@@ -46,10 +50,18 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         // chooseBlockchain(list)
         myPort = DEFAULT_PORT;
         blockchain = new Blockchain();
+        numberMinerThread = DEFAULT_MINER_THREAD;
     }
 
     public Blockchain getBlockchain() throws RemoteException {
         return blockchain;
+    }
+
+    public void setNumberMinerThread(int numberMinerThread) {
+        if(numberMinerThread <= 0) {
+            throw new NumberFormatException("The number of miner threads must be > 0");
+        }
+        this.numberMinerThread = numberMinerThread;
     }
 
     public void sendTransaction(Transaction transaction) throws RemoteException {
@@ -88,7 +100,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         updateRegistry = new Thread(new UpdateRegistry(20000, 10));
         transactionsThread = new Thread(new TransactionsThread());
         blocksThread = new Thread(new BlocksThread());
-        minerThread = new Thread(new MinerThread(DIFFICULTY, 3));
+        minerThread = new Thread(new MinerThread(DIFFICULTY, numberMinerThread));
 
         updateRegistry.start();
         transactionsThread.start();
@@ -400,11 +412,12 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
                         // restart miner thread
                         // @SuppressWarnings("deprecation")
-
+                        if(pendingTransactions.size() < TRANSACTIONS_PER_BLOCK){
                         minerThread.stop();
                         // minerThread.start();
-                        minerThread = new Thread(new MinerThread(DIFFICULTY, 3));
+                        minerThread = new Thread(new MinerThread(DIFFICULTY, numberMinerThread));
                         minerThread.start();
+                        }
 
                     }
 
@@ -521,7 +534,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 // TODO: does not work well, look after minerThread debug
                 try {
                     // minerThread.start();
-                    minerThread = new Thread(new MinerThread(DIFFICULTY, 3));
+                    minerThread = new Thread(new MinerThread(DIFFICULTY, numberMinerThread));
                     minerThread.start();
                 } catch (IllegalThreadStateException itse) {
                     itse.printStackTrace();
@@ -566,7 +579,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
                 // there are at least one transaction
                 Iterator<Transaction> iter = pendingTransactions.iterator();
-                while (iter.hasNext() && actual.size() < 4) { // no more than 4 transactions for block
+                while (iter.hasNext() && actual.size() < TRANSACTIONS_PER_BLOCK) { // no more than 4 transactions for block
                     Transaction t = iter.next();
                     if (t.verify() && !blockchain.contains(t)) {
                         System.out.println("Aggiunta transazione a lista");
