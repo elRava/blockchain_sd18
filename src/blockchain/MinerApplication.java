@@ -29,9 +29,9 @@ public class MinerApplication {
 
         System.out.println("Miner application started");
 
-
         final int DEFAULT_PORT_REG = 7867;
         int portMiner = -1;
+        int numberThread = 1;
         boolean fromBackup = false;
         Miner min = null;
         ArrayList<InetSocketAddress> listReg = new ArrayList<>();
@@ -52,9 +52,11 @@ public class MinerApplication {
                 } else {
                     listReg.add(new InetSocketAddress(val[0], DEFAULT_PORT_REG));
                 }
+            } else if (args[i].equals("-t")) {
+                numberThread = Integer.valueOf(args[++i]);
             }
         }
-        if(portMiner == -1){
+        if (portMiner == -1) {
             portMiner = Miner.DEFAULT_PORT;
         }
 
@@ -63,14 +65,16 @@ public class MinerApplication {
             // on java RMI
             java.rmi.registry.Registry r = LocateRegistry.createRegistry(portMiner);
             min = new Miner();
-            //porta di default presa automaticamente se non viene settata qua
-            //messa nel costruttore del miner
+            // porta di default presa automaticamente se non viene settata qua
+            // messa nel costruttore del miner
             min.setPort(portMiner);
+            min.setNumberMinerThread(numberThread);
             r.rebind("miner", min);
             // System.setProperty("java.rmi.server.hostname", "192.168.1.224");
             // System.out.println("......." + InetAddress.getLocalHost().getHostAddress());
-            //InetAddre
-            System.out.println("Miner bound at //"+Miner.getMyAddress().getHostAddress()+":" + portMiner + "/miner");
+            // InetAddre
+            System.out
+                    .println("Miner bound at //" + Miner.getMyAddress().getHostAddress() + ":" + portMiner + "/miner");
             /*
              * if(fromBackup) { System.out.println("Restoring registry from backup");
              * reg.restore(new File(path));
@@ -80,8 +84,6 @@ public class MinerApplication {
             re.printStackTrace();
             System.exit(1);
         }
-
-
 
         /*
          * int portReg = 7867; String ip = "192.168.1.72";
