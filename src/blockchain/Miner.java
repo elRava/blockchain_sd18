@@ -551,10 +551,10 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             date.setTime(t.getTime());
                             String h = new SimpleDateFormat("yyyyMMddhhmmss").format(date);
                             
-                            
                             blockchain.print("blockchain/print/M"+myPort+"_"+ h + ".txt");
                         }
                     }
+
                     if (valid) {
                         // send to every miner
                         for (MinerInterface mi : listMiners) {

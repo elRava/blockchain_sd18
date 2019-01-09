@@ -233,7 +233,7 @@ public class Blockchain implements Serializable {
                 }
                 write.println(s);
             }
-            
+
             write.close();
         } catch (IOException e) {
             System.out.println("Error: " + e);
