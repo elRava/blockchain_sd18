@@ -38,7 +38,6 @@ public class Blockchain implements Serializable {
         }
         return missingBlock;
     }
-    
 
 
     /**
@@ -157,7 +156,7 @@ public class Blockchain implements Serializable {
     }
 
     public int length() {
-        return last.depth;
+        return last.depth+1;
     }
 
     /*

@@ -47,7 +47,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     private int numberMinerThread;
 
-    private boolean firstConnection = true;
+    //private boolean firstConnection = true;
 
     private Lock lock;
     private Condition cannotConnectBlockCondition;
@@ -71,6 +71,11 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
         numberMinerThread = DEFAULT_MINER_THREAD;
     }
+
+    public LinkedList<Block> getBlocksGivenLength(int depth) throws RemoteException{
+        return blockchain.getFromDepth(depth);
+    }
+    
 
     public Blockchain getBlockchain() throws RemoteException {
         return blockchain;
@@ -128,6 +133,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     }
 
+    /*
     private void chooseBlockchain() {
         synchronized (blockchain) {
             ArrayList<Triplet<byte[], MinerInterface, Integer>> hashMiner = new ArrayList<>();
@@ -221,9 +227,9 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
              */
 
             // System.out.println("Blockchain is aggiornata, rilascio il synchronized");
-        }
+       // }
 
-    }
+    //}
 
     public static InetAddress getMyAddress() {
         Enumeration e = null;
@@ -377,12 +383,12 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         minersIPList = chosedMiner;
                     }
                 }
-
+                /*
                 if (firstConnection) {
                     chooseBlockchain();
                     firstConnection = false;
                 }
-
+                */
                 try {
                     Thread.sleep(delayTime);
                 } catch (InterruptedException ie) {
@@ -752,7 +758,6 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             while(!blockList.isEmpty()) {
                                 ((LinkedList<Block>) blockToSend).addFirst(blockList.removeLast());
                             }
-    
                         }
     
                     }
@@ -773,6 +778,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     }
 
+    /*
     private class Triplet<T, U, V> {
 
         public T first;
@@ -786,5 +792,6 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         }
 
     }
+    */
 
 }
