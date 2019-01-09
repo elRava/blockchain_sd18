@@ -58,7 +58,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     }
 
     public void setNumberMinerThread(int numberMinerThread) {
-        if(numberMinerThread <= 0) {
+        if (numberMinerThread <= 0) {
             throw new NumberFormatException("The number of miner threads must be > 0");
         }
         this.numberMinerThread = numberMinerThread;
@@ -412,11 +412,11 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
                         // restart miner thread
                         // @SuppressWarnings("deprecation")
-                        if(pendingTransactions.size() < TRANSACTIONS_PER_BLOCK){
-                        minerThread.stop();
-                        // minerThread.start();
-                        minerThread = new Thread(new MinerThread(DIFFICULTY, numberMinerThread));
-                        minerThread.start();
+                        if (pendingTransactions.size() < TRANSACTIONS_PER_BLOCK) {
+                            minerThread.stop();
+                            // minerThread.start();
+                            minerThread = new Thread(new MinerThread(DIFFICULTY, numberMinerThread));
+                            minerThread.start();
                         }
 
                     }
@@ -579,7 +579,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
                 // there are at least one transaction
                 Iterator<Transaction> iter = pendingTransactions.iterator();
-                while (iter.hasNext() && actual.size() < TRANSACTIONS_PER_BLOCK) { // no more than 4 transactions for block
+                while (iter.hasNext() && actual.size() < TRANSACTIONS_PER_BLOCK) { // no more than 4 transactions for
+                                                                                   // block
                     Transaction t = iter.next();
                     if (t.verify() && !blockchain.contains(t)) {
                         System.out.println("Aggiunta transazione a lista");
