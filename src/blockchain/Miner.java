@@ -546,12 +546,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             System.out.println("Blockchain length: " + blockchain.length());
                             System.out.println(
                                     "Blockchain last block: " + Block.hashToString(blockchain.lastBlock().getHash()));
-                            Timestamp t = new Timestamp(System.currentTimeMillis());
-                            Date date = new Date();
-                            date.setTime(t.getTime());
-                            String h = new SimpleDateFormat("yyyyMMddhhmmss").format(date);
                             
-                            blockchain.print("blockchain/print/M"+myPort+"_"+ h + ".txt");
+                            blockchain.print("blockchain/print/M"+myPort + ".txt");
                         }
                     }
 

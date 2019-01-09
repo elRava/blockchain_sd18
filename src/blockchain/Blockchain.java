@@ -100,7 +100,7 @@ public class Blockchain implements Serializable {
         LinkedList<Ring> queue = new LinkedList<>();
         queue.add(first);
         while(!queue.isEmpty()){
-            Ring current = queue.get(0);
+            Ring current = queue.remove(0);
             if(current.block.equals(block)){
                 return true;
             }
