@@ -158,7 +158,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 }
             }
             System.out.println(
-                    "Hash vincitore is " + Block.hashToString(longer) + " che è stato trovato "+   max + "  volte");
+                    "Hash vincitore is " + Block.hashToString(longer) + " che si trova "+   max + "  volte");
             System.out.println("Inizio il download");
             try{
                 blockchain = bestMiner.getBlockchain();
