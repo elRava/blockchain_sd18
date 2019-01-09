@@ -110,6 +110,8 @@ public class MinerApplication {
 
         min.startThreads();
 
+        //min.chooseBlockchain();
+
         /*
          * RegistryApplication ra = new RegistryApplication(); CleanThread ct = ra.new
          * CleanThread(reg); Thread cleanThread = new Thread(ct);
