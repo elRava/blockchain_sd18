@@ -39,6 +39,14 @@ public class Blockchain implements Serializable {
         return missingBlock;
     }
 
+    public byte[] hashGivenDepth(int depth){
+        Ring current = last;
+        while(current.depth!=depth){
+            current = current.father;
+        }
+        return current.block.getHash();
+    }
+
     /**
      * Method used to add a mined block on the blockchain It will be insert
      * according to its previous hash

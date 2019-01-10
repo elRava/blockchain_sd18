@@ -728,10 +728,11 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 //complessità folle, da sistemare in futuro
                 //non ci sincronizziamo su minerList, non è un problema perdere un miner perchè non più attivo
                 int maxDepth = -1;
-                while (maxDepth != -1) {
+                int currentDepth = blockchain.length()-1;
+                while (maxDepth == -1) {
                     for (MinerInterface miner : minersIPList) {
                         try {
-                            int depth = miner.depthOfTheBlock(blockchain.lastBlock().getHash());
+                            int depth = miner.depthOfTheBlock(blockchain.hashGivenDepth(currentDepth));
                             if (poll.containsKey(depth)) {
                                 poll.replace(depth, poll.get(depth) + 1);
                             } else {
@@ -742,13 +743,14 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             System.exit(1);
                         }
                     }
-                    maxDepth = 0;
+                    maxDepth = -1;
                     int maxFreq = 0;
                     for (Integer i : poll.keySet()) {
                         if (poll.get(i) > maxFreq) {
                             maxDepth = i;
                         }
                     }
+                    currentDepth--;
                 }
 
                 // chiedi tutti blocchi a partire dall'ultimo che ho e inseriscili in testa a
