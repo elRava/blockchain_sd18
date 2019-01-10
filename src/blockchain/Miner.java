@@ -8,6 +8,7 @@ import java.net.UnknownHostException;
 import java.rmi.*;
 import java.rmi.registry.Registry;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -45,11 +46,14 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     private int numberMinerThread;
 
-    //private boolean firstConnection = true;
+    // private boolean firstConnection = true;
 
-    private Lock lock;
-    private Condition cannotConnectBlockCondition;
-    private Condition waitForDownload;
+    private Semaphore askBlocksSemaphore;
+    private Semaphore blocksRetrievedSemaphore;
+
+    private int blocksDoNotSend = 0;
+
+    // private int lengthToSend = 0;
 
     public Miner() throws RemoteException {
         super();
@@ -63,17 +67,19 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         // chooseBlockchain();
         myPort = DEFAULT_PORT;
 
-        lock = new ReentrantLock();
-        cannotConnectBlockCondition = lock.newCondition();
-        waitForDownload = lock.newCondition();
+        askBlocksSemaphore = new Semaphore(0);
+        blocksRetrievedSemaphore = new Semaphore(0);
 
         numberMinerThread = DEFAULT_MINER_THREAD;
     }
 
-    public LinkedList<Block> getBlocksGivenLength(int depth) throws RemoteException{
+    public LinkedList<Block> getBlocksGivenLength(int depth) throws RemoteException {
         return blockchain.getFromDepth(depth);
     }
-    
+
+    public int depthOfTheBlock(byte[] hash) throws RemoteException {
+        return blockchain.depthOfTheBlock(hash);
+    }
 
     public Blockchain getBlockchain() throws RemoteException {
         return blockchain;
@@ -125,7 +131,6 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         minerThread = new Thread(new MinerThread(DIFFICULTY, numberMinerThread));
         askBlockThread = new Thread(new AskBlocksThread());
 
-
         updateRegistry.start();
         transactionsThread.start();
         blocksThread.start();
@@ -135,102 +140,74 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     }
 
     /*
-    private void chooseBlockchain() {
-        synchronized (blockchain) {
-            ArrayList<Triplet<byte[], MinerInterface, Integer>> hashMiner = new ArrayList<>();
-            synchronized (minersIPList) {
-                Iterator<MinerInterface> iterMiner = minersIPList.iterator();
-                while (iterMiner.hasNext()) {
-                    try {
-                        // listHash.add(iterMiner.next().getBlockchain().getHash());
-                        MinerInterface currentMiner = iterMiner.next();
-                        byte[] currentHash = currentMiner.getBlockchain().getHash();
-                        boolean found = false;
-                        for (int i = 0; i < hashMiner.size(); i++) {
-                            if (Arrays.equals(currentHash, hashMiner.get(i).first)) {
-                                hashMiner.get(i).third ++;
-                                found = true;
-                            }
-                        }
-                        if (!found) {
-                            hashMiner.add(new Triplet<byte[], MinerInterface, Integer>(currentHash, currentMiner, 1));
-                        }
-                    } catch (RemoteException re) {
-                        re.printStackTrace();
-                    }
-                }
-            }
-            System.out.println("Ho preso " + hashMiner.size() + " differenti blockchain");
-            if (hashMiner.isEmpty()) {
-                return;
-            }
-            // Iterator<byte[]> occurance = setByte.iterator();
-            byte[] longer = hashMiner.get(0).first;
-            int max = hashMiner.get(0).third;
-            MinerInterface bestMiner = hashMiner.get(0).second;
-            for (int i = 1; i < hashMiner.size(); i++) {
-                if (hashMiner.get(i).third > max) {
-                    longer = hashMiner.get(i).first;
-                    max = hashMiner.get(i).third;
-                    bestMiner = hashMiner.get(i).second;
-                }
-            }
-            System.out.println(
-                    "Hash vincitore is " + Block.hashToString(longer) + " che si trova "+   max + "  volte");
-            System.out.println("Inizio il download");
-            try{
-                blockchain = bestMiner.getBlockchain();
-            }catch(RemoteException re){
-                System.err.println("Run again");
-                System.exit(1);
-            }    
-            System.out.println("Fine download");
+     * private void chooseBlockchain() { synchronized (blockchain) {
+     * ArrayList<Triplet<byte[], MinerInterface, Integer>> hashMiner = new
+     * ArrayList<>(); synchronized (minersIPList) { Iterator<MinerInterface>
+     * iterMiner = minersIPList.iterator(); while (iterMiner.hasNext()) { try { //
+     * listHash.add(iterMiner.next().getBlockchain().getHash()); MinerInterface
+     * currentMiner = iterMiner.next(); byte[] currentHash =
+     * currentMiner.getBlockchain().getHash(); boolean found = false; for (int i =
+     * 0; i < hashMiner.size(); i++) { if (Arrays.equals(currentHash,
+     * hashMiner.get(i).first)) { hashMiner.get(i).third ++; found = true; } } if
+     * (!found) { hashMiner.add(new Triplet<byte[], MinerInterface,
+     * Integer>(currentHash, currentMiner, 1)); } } catch (RemoteException re) {
+     * re.printStackTrace(); } } } System.out.println("Ho preso " + hashMiner.size()
+     * + " differenti blockchain"); if (hashMiner.isEmpty()) { return; } //
+     * Iterator<byte[]> occurance = setByte.iterator(); byte[] longer =
+     * hashMiner.get(0).first; int max = hashMiner.get(0).third; MinerInterface
+     * bestMiner = hashMiner.get(0).second; for (int i = 1; i < hashMiner.size();
+     * i++) { if (hashMiner.get(i).third > max) { longer = hashMiner.get(i).first;
+     * max = hashMiner.get(i).third; bestMiner = hashMiner.get(i).second; } }
+     * System.out.println( "Hash vincitore is " + Block.hashToString(longer) +
+     * " che si trova "+ max + "  volte"); System.out.println("Inizio il download");
+     * try{ blockchain = bestMiner.getBlockchain(); }catch(RemoteException re){
+     * System.err.println("Run again"); System.exit(1); }
+     * System.out.println("Fine download");
+     * 
+     * blockchain.print("blockchain/print/M" + myPort + "_dopochooseblock.txt");
+     * 
+     * // I need to find which blockchain is the most frequent
+     * 
+     * /* while(iterByte.hasNext()){
+     * 
+     * }
+     * 
+     * 
+     * Map<byte[], Integer> map = new HashMap<byte[], Integer>(); Iterator<byte[]>
+     * iterByte = listHash.iterator(); while (iterByte.hasNext()) { byte[] current =
+     * iterByte.next(); if (!map.containsKey(current)) { map.put(current, 1); } else
+     * { int previousOccurance = map.get(current); previousOccurance++;
+     * map.put(current, previousOccurance); } }
+     * 
+     * Set<byte[]> setByte = map.keySet();
+     * 
+     * System.out.println("Ho " + setByte.size() +
+     * " possibili scelte di hash della blockchain");
+     * 
+     * if (setByte.isEmpty()) { return; }
+     * 
+     * Iterator<byte[]> occurance = setByte.iterator(); byte[] longer =
+     * occurance.next(); int occ = map.get(longer); while (occurance.hasNext()) {
+     * byte[] current = occurance.next(); if (map.get(current) > occ) { longer =
+     * current; occ = map.get(current); } }
+     */
 
-            blockchain.print("blockchain/print/M" + myPort + "_dopochooseblock.txt");
+    // i find the hash of the blockchain
+    /*
+     * synchronized (minersIPList) { Iterator<MinerInterface> minerIter =
+     * minersIPList.iterator(); while (minerIter.hasNext()) { MinerInterface
+     * currentMiner = minerIter.next(); try { if
+     * (Arrays.equals(currentMiner.getBlockchain().getHash(), longer)) { //
+     * synchronized (blockchain) { System.out
+     * .println("Ho trovato il miner da cui scaricare la blockchain, inizio il download"
+     * ); blockchain = currentMiner.getBlockchain(); break; // } } } catch
+     * (RemoteException re) { re.printStackTrace(); } } }
+     */
 
-            // I need to find which blockchain is the most frequent
+    // System.out.println("Blockchain is aggiornata, rilascio il synchronized");
+    // }
 
-            /*
-             * while(iterByte.hasNext()){
-             * 
-             * }
-             * 
-             * 
-             * Map<byte[], Integer> map = new HashMap<byte[], Integer>(); Iterator<byte[]>
-             * iterByte = listHash.iterator(); while (iterByte.hasNext()) { byte[] current =
-             * iterByte.next(); if (!map.containsKey(current)) { map.put(current, 1); } else
-             * { int previousOccurance = map.get(current); previousOccurance++;
-             * map.put(current, previousOccurance); } }
-             * 
-             * Set<byte[]> setByte = map.keySet();
-             * 
-             * System.out.println("Ho " + setByte.size() +
-             * " possibili scelte di hash della blockchain");
-             * 
-             * if (setByte.isEmpty()) { return; }
-             * 
-             * Iterator<byte[]> occurance = setByte.iterator(); byte[] longer =
-             * occurance.next(); int occ = map.get(longer); while (occurance.hasNext()) {
-             * byte[] current = occurance.next(); if (map.get(current) > occ) { longer =
-             * current; occ = map.get(current); } }
-             */
-
-            // i find the hash of the blockchain
-            /*
-             * synchronized (minersIPList) { Iterator<MinerInterface> minerIter =
-             * minersIPList.iterator(); while (minerIter.hasNext()) { MinerInterface
-             * currentMiner = minerIter.next(); try { if
-             * (Arrays.equals(currentMiner.getBlockchain().getHash(), longer)) { //
-             * synchronized (blockchain) { System.out
-             * .println("Ho trovato il miner da cui scaricare la blockchain, inizio il download"
-             * ); blockchain = currentMiner.getBlockchain(); break; // } } } catch
-             * (RemoteException re) { re.printStackTrace(); } } }
-             */
-
-            // System.out.println("Blockchain is aggiornata, rilascio il synchronized");
-       // }
-
-    //}
+    // }
 
     public static InetAddress getMyAddress() {
         Enumeration e = null;
@@ -385,11 +362,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     }
                 }
                 /*
-                if (firstConnection) {
-                    chooseBlockchain();
-                    firstConnection = false;
-                }
-                */
+                 * if (firstConnection) { chooseBlockchain(); firstConnection = false; }
+                 */
                 try {
                     Thread.sleep(delayTime);
                 } catch (InterruptedException ie) {
@@ -581,17 +555,16 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                                 }
                             }
 
-                            if(blockchain.addBlock(b) == false) {
-                                cannotConnectBlockCondition.signal();
+                            if (blockchain.addBlock(b) == false) {
+                                askBlocksSemaphore.release();
                                 try {
-                                    waitForDownload.wait();
-                                    break;
-                                } catch(InterruptedException ie) {
+                                    blocksRetrievedSemaphore.acquire();
+                                } catch (InterruptedException ie) {
                                     ie.printStackTrace();
                                     System.exit(1);
                                 }
                             }
-                            
+
                             // remove block's transaction from pending transactions
                             synchronized (pendingTransactions) {
                                 for (Transaction t : b.getListTransactions()) {
@@ -609,7 +582,10 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         }
                     }
                     // System.out.println("esco");
-                    if (valid) {
+                    // blockDoNotSend sono blocchi inseriti in blockToSend che arrivano da altri
+                    // miner quando chiedo blocchi
+                    // non devi riinviarli
+                    if (valid && blocksDoNotSend == 0) {
                         // send to every miner
                         for (MinerInterface mi : listMiners) {
                             try {
@@ -618,6 +594,10 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                                 re.printStackTrace();
                             }
                         }
+                    }
+
+                    if (blocksDoNotSend > 0) {
+                        blocksDoNotSend--;
                     }
                 }
 
@@ -725,7 +705,6 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     }
 
-
     /**
      * 
      */
@@ -733,45 +712,71 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
         public void run() {
 
-            while(true) {
+            while (true) {
 
                 try {
-                    cannotConnectBlockCondition.wait();
-                } catch(InterruptedException ie) {
+                    askBlocksSemaphore.acquire();
+                } catch (InterruptedException ie) {
                     ie.printStackTrace();
                     System.exit(1);
                 }
 
-                // chiedi tutti blocchi a partire dall'ultimo che ho e inseriscili in testa a blocktosend
-                // ocio deadlock!!!!!!
-                //synchronized(minersIPList) {
-                    synchronized(blockToSend) {
+                // Mappa profondità frequenza
+                Map<Integer, Integer> poll = new HashMap<>();
 
-                        for(MinerInterface miner : minersIPList) {
-                            LinkedList<Block> blockList = new LinkedList<>();
-                            try {
-                                blockList = miner.getBlocksGivenLength(blockchain.length());
-                            } catch(RemoteException re) {
-                                re.printStackTrace();
-                                System.exit(1);
+
+                //complessità folle, da sistemare in futuro
+                //non ci sincronizziamo su minerList, non è un problema perdere un miner perchè non più attivo
+                int maxDepth = -1;
+                while (maxDepth != -1) {
+                    for (MinerInterface miner : minersIPList) {
+                        try {
+                            int depth = miner.depthOfTheBlock(blockchain.lastBlock().getHash());
+                            if (poll.containsKey(depth)) {
+                                poll.replace(depth, poll.get(depth) + 1);
+                            } else {
+                                poll.put(depth, 1);
                             }
-    
-                            while(!blockList.isEmpty()) {
-                                ((LinkedList<Block>) blockToSend).addFirst(blockList.removeLast());
-                            }
+                        } catch (RemoteException re) {
+                            re.printStackTrace();
+                            System.exit(1);
                         }
-    
                     }
-                //}
+                    maxDepth = 0;
+                    int maxFreq = 0;
+                    for (Integer i : poll.keySet()) {
+                        if (poll.get(i) > maxFreq) {
+                            maxDepth = i;
+                        }
+                    }
+                }
 
+                // chiedi tutti blocchi a partire dall'ultimo che ho e inseriscili in testa a
+                // blocktosend
+                // ocio deadlock!!!!!!
+                // synchronized(minersIPList) {
+                synchronized (blockToSend) {
 
+                    for (MinerInterface miner : minersIPList) {
+                        LinkedList<Block> blockList = new LinkedList<>();
+                        try {
+                            // System.out.println("Chiedo lista blocchi a miner");
+                            blockList = miner.getBlocksGivenLength(maxDepth);
+                        } catch (RemoteException re) {
+                            re.printStackTrace();
+                            System.exit(1);
+                        }
 
+                        while (!blockList.isEmpty()) {
+                            ((LinkedList<Block>) blockToSend).addFirst(blockList.removeLast());
+                            blocksDoNotSend++;
+                        }
+                    }
 
+                }
+                // }
 
-
-
-                waitForDownload.signal();
-
+                blocksRetrievedSemaphore.release();
 
             }
 
@@ -780,19 +785,14 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     }
 
     /*
-    private class Triplet<T, U, V> {
-
-        public T first;
-        public U second;
-        public V third;
-
-        public Triplet(T first, U second, V third) {
-            this.first = first;
-            this.second = second;
-            this.third = third;
-        }
-
-    }
-    */
+     * private class Triplet<T, U, V> {
+     * 
+     * public T first; public U second; public V third;
+     * 
+     * public Triplet(T first, U second, V third) { this.first = first; this.second
+     * = second; this.third = third; }
+     * 
+     * }
+     */
 
 }
