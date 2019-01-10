@@ -728,7 +728,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 //complessità folle, da sistemare in futuro
                 //non ci sincronizziamo su minerList, non è un problema perdere un miner perchè non più attivo
                 int maxDepth = -1;
-                while (maxDepth != -1) {
+                while (maxDepth == -1) {
                     for (MinerInterface miner : minersIPList) {
                         try {
                             int depth = miner.depthOfTheBlock(blockchain.lastBlock().getHash());
