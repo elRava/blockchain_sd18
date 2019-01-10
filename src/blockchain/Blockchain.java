@@ -159,6 +159,18 @@ public class Blockchain implements Serializable {
         return last.depth + 1;
     }
 
+    public int depthOfTheBlock(byte[] hash){
+        Ring current = last;
+        while(current!=null && !Arrays.equals(current.block.getHash(), hash)){
+            current = current.father;
+        }
+        if(current!=null){
+            return last.depth;
+        }
+        return -1;
+    } 
+
+
     /*
      * public boolean contains(Block b){ Iterator<Block> iter = this.getIterator();
      * byte[] target = b.getHash(); while(iter.hasNext()){ byte[] current =

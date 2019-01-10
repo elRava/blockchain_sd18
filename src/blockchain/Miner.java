@@ -12,9 +12,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import org.omg.CORBA.CurrentHelper;
-
 import java.net.*;
 import registry.*;
 import java.rmi.server.*;
@@ -56,6 +53,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     private int blocksDoNotSend = 0;
 
+    // private int lengthToSend = 0;
+
     public Miner() throws RemoteException {
         super();
         transactionToSend = new LinkedList<Transaction>();
@@ -76,6 +75,10 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     public LinkedList<Block> getBlocksGivenLength(int depth) throws RemoteException {
         return blockchain.getFromDepth(depth);
+    }
+
+    public int depthOfTheBlock(byte[] hash) throws RemoteException {
+        return blockchain.depthOfTheBlock(hash);
     }
 
     public Blockchain getBlockchain() throws RemoteException {
@@ -579,7 +582,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         }
                     }
                     // System.out.println("esco");
-                    // blockDoNotSend sono blocchi inseriti in blockToSend che arrivano da altri miner quando chiedo blocchi
+                    // blockDoNotSend sono blocchi inseriti in blockToSend che arrivano da altri
+                    // miner quando chiedo blocchi
                     // non devi riinviarli
                     if (valid && blocksDoNotSend == 0) {
                         // send to every miner
@@ -592,7 +596,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         }
                     }
 
-                    if(blocksDoNotSend > 0) {
+                    if (blocksDoNotSend > 0) {
                         blocksDoNotSend--;
                     }
                 }
@@ -717,6 +721,36 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     System.exit(1);
                 }
 
+                // Mappa profondità frequenza
+                Map<Integer, Integer> poll = new HashMap<>();
+
+
+                //complessità folle, da sistemare in futuro
+                //non ci sincronizziamo su minerList, non è un problema perdere un miner perchè non più attivo
+                int maxDepth = -1;
+                while (maxDepth != -1) {
+                    for (MinerInterface miner : minersIPList) {
+                        try {
+                            int depth = miner.depthOfTheBlock(blockchain.lastBlock().getHash());
+                            if (poll.containsKey(depth)) {
+                                poll.replace(depth, poll.get(depth) + 1);
+                            } else {
+                                poll.put(depth, 1);
+                            }
+                        } catch (RemoteException re) {
+                            re.printStackTrace();
+                            System.exit(1);
+                        }
+                    }
+                    maxDepth = 0;
+                    int maxFreq = 0;
+                    for (Integer i : poll.keySet()) {
+                        if (poll.get(i) > maxFreq) {
+                            maxDepth = i;
+                        }
+                    }
+                }
+
                 // chiedi tutti blocchi a partire dall'ultimo che ho e inseriscili in testa a
                 // blocktosend
                 // ocio deadlock!!!!!!
@@ -726,8 +760,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     for (MinerInterface miner : minersIPList) {
                         LinkedList<Block> blockList = new LinkedList<>();
                         try {
-                            // System.out.println("Chiedo lista blocci a miner");
-                            blockList = miner.getBlocksGivenLength(blockchain.length());
+                            // System.out.println("Chiedo lista blocchi a miner");
+                            blockList = miner.getBlocksGivenLength(maxDepth);
                         } catch (RemoteException re) {
                             re.printStackTrace();
                             System.exit(1);
