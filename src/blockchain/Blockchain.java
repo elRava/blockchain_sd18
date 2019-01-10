@@ -71,6 +71,9 @@ public class Blockchain implements Serializable {
                     return false;
                 }        
                 // I get the list of my siblings
+                if(current.father == null) {
+                    return false;
+                }
                 List<Ring> sibling = current.getSiblings();
                 // I search recursively in all the subtree with the sibling as root
                 // It is more probable to find there instead of looking deeper
@@ -251,14 +254,14 @@ public class Blockchain implements Serializable {
                 String s = "";
                 s += "b_" + depth + ": " + Block.hashToString(b.getHash()) + " - ";
                 depth--;
-                for (int i = 0; i < b.getListTransactions().size()-1; i++) {
+                for (int i = 0; i < b.getListTransactions().size(); i++) {
                     s += "t" + i + ": " + Block.hashToString(b.getListTransactions().get(i).getHash()) + ", ";
                 }
-                int lastIndex = b.getListTransactions().size()-1;
-                s += "t" + lastIndex + ": " + Block.hashToString(b.getListTransactions().get(lastIndex).getHash());
+                //int lastIndex = b.getListTransactions().size()-1;
+                //s += "t" + lastIndex + ": " + Block.hashToString(b.getListTransactions().get(lastIndex).getHash());
                 write.println(s);
             }
-            
+
             write.close();
         } catch (IOException e) {
             System.out.println("Error: " + e);

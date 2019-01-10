@@ -8,9 +8,9 @@ import java.net.UnknownHostException;
 import java.rmi.*;
 import java.rmi.registry.Registry;
 import java.util.*;
-
-import org.omg.CORBA.CurrentHelper;
-
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.net.*;
 import registry.*;
 import java.rmi.server.*;
@@ -39,12 +39,17 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     private Thread transactionsThread;
     private Thread blocksThread;
     private Thread minerThread;
+    private Thread askBlockThread;
 
     private int myPort;
 
     private int numberMinerThread;
 
-    private boolean firstConnection = true;
+    //private boolean firstConnection = true;
+
+    private Lock lock;
+    private Condition cannotConnectBlockCondition;
+    private Condition waitForDownload;
 
     public Miner() throws RemoteException {
         super();
@@ -57,6 +62,10 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         blockchain = new Blockchain();
         // chooseBlockchain();
         myPort = DEFAULT_PORT;
+
+        lock = new ReentrantLock();
+        cannotConnectBlockCondition = lock.newCondition();
+        waitForDownload = lock.newCondition();
 
         numberMinerThread = DEFAULT_MINER_THREAD;
     }
@@ -114,14 +123,18 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         transactionsThread = new Thread(new TransactionsThread());
         blocksThread = new Thread(new BlocksThread());
         minerThread = new Thread(new MinerThread(DIFFICULTY, numberMinerThread));
+        askBlockThread = new Thread(new AskBlocksThread());
+
 
         updateRegistry.start();
         transactionsThread.start();
         blocksThread.start();
         minerThread.start();
+        askBlockThread.start();
 
     }
 
+    /*
     private void chooseBlockchain() {
         synchronized (blockchain) {
             ArrayList<Triplet<byte[], MinerInterface, Integer>> hashMiner = new ArrayList<>();
@@ -173,6 +186,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
             }    
             System.out.println("Fine download");
 
+            blockchain.print("blockchain/print/M" + myPort + "_dopochooseblock.txt");
+
             // I need to find which blockchain is the most frequent
 
             /*
@@ -213,9 +228,9 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
              */
 
             // System.out.println("Blockchain is aggiornata, rilascio il synchronized");
-        }
+       // }
 
-    }
+    //}
 
     public static InetAddress getMyAddress() {
         Enumeration e = null;
@@ -369,12 +384,12 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         minersIPList = chosedMiner;
                     }
                 }
-
+                /*
                 if (firstConnection) {
                     chooseBlockchain();
                     firstConnection = false;
                 }
-
+                */
                 try {
                     Thread.sleep(delayTime);
                 } catch (InterruptedException ie) {
@@ -470,7 +485,6 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         // @SuppressWarnings("deprecation")
                         if (pendingTransactions.size() < TRANSACTIONS_PER_BLOCK) {
                             minerThread.stop();
-
                             // minerThread.start();
                             minerThread = new Thread(new MinerThread(DIFFICULTY, numberMinerThread));
                             minerThread.start();
@@ -547,6 +561,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     }
                 }
                 System.out.println("Temp list " + tempList.size());
+
                 while (!tempList.isEmpty()) {
                     Block b = tempList.remove(0);
 
@@ -566,8 +581,17 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                                 }
                             }
 
-                            blockchain.addBlock(b);
-
+                            if(blockchain.addBlock(b) == false) {
+                                cannotConnectBlockCondition.signal();
+                                try {
+                                    waitForDownload.wait();
+                                    break;
+                                } catch(InterruptedException ie) {
+                                    ie.printStackTrace();
+                                    System.exit(1);
+                                }
+                            }
+                            
                             // remove block's transaction from pending transactions
                             synchronized (pendingTransactions) {
                                 for (Transaction t : b.getListTransactions()) {
@@ -701,6 +725,61 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     }
 
+
+    /**
+     * 
+     */
+    private class AskBlocksThread implements Runnable {
+
+        public void run() {
+
+            while(true) {
+
+                try {
+                    cannotConnectBlockCondition.wait();
+                } catch(InterruptedException ie) {
+                    ie.printStackTrace();
+                    System.exit(1);
+                }
+
+                // chiedi tutti blocchi a partire dall'ultimo che ho e inseriscili in testa a blocktosend
+                // ocio deadlock!!!!!!
+                //synchronized(minersIPList) {
+                    synchronized(blockToSend) {
+
+                        for(MinerInterface miner : minersIPList) {
+                            LinkedList<Block> blockList = new LinkedList<>();
+                            try {
+                                blockList = miner.getBlocksGivenLength(blockchain.length());
+                            } catch(RemoteException re) {
+                                re.printStackTrace();
+                                System.exit(1);
+                            }
+    
+                            while(!blockList.isEmpty()) {
+                                ((LinkedList<Block>) blockToSend).addFirst(blockList.removeLast());
+                            }
+                        }
+    
+                    }
+                //}
+
+
+
+
+
+
+
+                waitForDownload.signal();
+
+
+            }
+
+        }
+
+    }
+
+    /*
     private class Triplet<T, U, V> {
 
         public T first;
@@ -714,5 +793,6 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         }
 
     }
+    */
 
 }
