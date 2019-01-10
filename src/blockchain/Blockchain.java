@@ -27,18 +27,17 @@ public class Blockchain implements Serializable {
         this.first = firstBlock;
     }
 
-    public LinkedList<Block> getFromDepth(int depth){
+    public LinkedList<Block> getFromDepth(int depth) {
         LinkedList<Block> missingBlock = new LinkedList<>();
         int currentLength = last.depth;
         Ring currentRing = last;
-        while(currentLength>=depth){
+        while (currentLength >= depth) {
             missingBlock.add(currentRing.block);
             currentRing = currentRing.father;
             currentLength = currentRing.depth;
         }
         return missingBlock;
     }
-
 
     /**
      * Method used to add a mined block on the blockchain It will be insert
@@ -66,12 +65,13 @@ public class Blockchain implements Serializable {
 
             // Normally the block will be linked to the last block added to the blockchain
             if (!Arrays.equals(target, current.block.getHash())) { // If it's not..
-                //If i looking for same sibling of the genesis, previous is not in the blockchain
-                if(current.father == null){
+                // If i looking for same sibling of the genesis, previous is not in the
+                // blockchain
+                if (current.father == null) {
                     return false;
-                }        
+                }
                 // I get the list of my siblings
-                if(current.father == null) {
+                if (current.father == null) {
                     return false;
                 }
                 List<Ring> sibling = current.getSiblings();
@@ -116,12 +116,12 @@ public class Blockchain implements Serializable {
     public boolean contains(Block block) {
         LinkedList<Ring> queue = new LinkedList<>();
         queue.add(first);
-        while(!queue.isEmpty()){
+        while (!queue.isEmpty()) {
             Ring current = queue.remove(0);
-            if(current.block.equals(block)){
+            if (current.block.equals(block)) {
                 return true;
             }
-            for(Ring r: current.sons){
+            for (Ring r : current.sons) {
                 queue.add(r);
             }
         }
@@ -156,7 +156,7 @@ public class Blockchain implements Serializable {
     }
 
     public int length() {
-        return last.depth+1;
+        return last.depth + 1;
     }
 
     /*
@@ -238,7 +238,6 @@ public class Blockchain implements Serializable {
         return new BlockchainIterator();
     }
 
-
     public void print(String path) {
         PrintStream write = null;
         // FileOutputStream f = null;
@@ -254,11 +253,12 @@ public class Blockchain implements Serializable {
                 String s = "";
                 s += "b_" + depth + ": " + Block.hashToString(b.getHash()) + " - ";
                 depth--;
-                for (int i = 0; i < b.getListTransactions().size()-1; i++) {
+                for (int i = 0; i < b.getListTransactions().size(); i++) {
                     s += "t" + i + ": " + Block.hashToString(b.getListTransactions().get(i).getHash()) + ", ";
                 }
-                int lastIndex = b.getListTransactions().size()-1;
-                s += "t" + lastIndex + ": " + Block.hashToString(b.getListTransactions().get(lastIndex).getHash());
+                // int lastIndex = b.getListTransactions().size()-1;
+                // s += "t" + lastIndex + ": " +
+                // Block.hashToString(b.getListTransactions().get(lastIndex).getHash());
                 write.println(s);
             }
 
