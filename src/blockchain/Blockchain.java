@@ -39,6 +39,14 @@ public class Blockchain implements Serializable {
         return missingBlock;
     }
 
+    public byte[] hashGivenDepth(int depth) {
+        Ring current = last;
+        while (current.depth != depth) {
+            current = current.father;
+        }
+        return current.block.getHash();
+    }
+
     /**
      * Method used to add a mined block on the blockchain It will be insert
      * according to its previous hash
@@ -159,19 +167,57 @@ public class Blockchain implements Serializable {
         return last.depth + 1;
     }
 
-    public int depthOfTheBlock(byte[] hash){
-        Ring current = last;
-        while(current!=null && !Arrays.equals(current.block.getHash(), hash)){
-            current = current.father;
+/*
+    public byte[] getFatherHash(byte[] hash) {
+        Iterator<Block> it = this.getIterator();
+        while(it.hasNext()) {
+            Block b = it.next();
+            // if hash is of the genesis it throws NullPointerException, which is right
+            if(b.getHash().equals(hash)) {
+                return b.getPreviousHash();
+            }
         }
-        if(current!=null){
-            return last.depth;
-        }
-        return -1;
-    } 
+        return null;
+    }
+*/
 
+
+    public LinkedList<Block> getMissingBlocks(byte[] hash) {
+
+        LinkedList<Ring> queue = new LinkedList<>();
+        LinkedList<Block> returnList = new LinkedList<>();
+
+        Ring iter = this.last;
+        while(iter.father != null) {
+
+            returnList.addFirst(iter.block);
+            queue.addLast(iter);
+
+            while(!queue.isEmpty()) {
+                Ring current = queue.removeFirst();
+                if(current.block.getHash().equals(hash)) {
+                    return returnList;
+                }
+                for(Ring son : current.sons) {
+                    if(!son.block.getHash().equals(returnList.getFirst().getHash())) {
+                        queue.addLast(son);
+                    }
+                }
+            }
+            
+            iter = iter.father;
+        }
+        // se non contiene blocco hash return tutta la blockchain
+        return returnList;
+
+    }
 
     /*
+     * public int depthOfTheBlock(byte[] hash){ Ring current = last;
+     * while(current!=null && !Arrays.equals(current.block.getHash(), hash)){
+     * current = current.father; } if(current!=null){ return last.depth; } return
+     * -1; }
+     * 
      * public boolean contains(Block b){ Iterator<Block> iter = this.getIterator();
      * byte[] target = b.getHash(); while(iter.hasNext()){ byte[] current =
      * iter.next().getHash(); boolean same = true; for(int i=0; i< target.length;

@@ -12,6 +12,9 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.omg.CORBA.portable.RemarshalException;
+
 import java.net.*;
 import registry.*;
 import java.rmi.server.*;
@@ -73,13 +76,13 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         numberMinerThread = DEFAULT_MINER_THREAD;
     }
 
-    public LinkedList<Block> getBlocksGivenLength(int depth) throws RemoteException {
-        return blockchain.getFromDepth(depth);
-    }
-
-    public int depthOfTheBlock(byte[] hash) throws RemoteException {
-        return blockchain.depthOfTheBlock(hash);
-    }
+    /*
+     * public LinkedList<Block> getBlocksGivenLength(int depth) throws
+     * RemoteException { return blockchain.getFromDepth(depth); }
+     * 
+     * public int depthOfTheBlock(byte[] hash) throws RemoteException { return
+     * blockchain.depthOfTheBlock(hash); }
+     */
 
     public Blockchain getBlockchain() throws RemoteException {
         return blockchain;
@@ -112,6 +115,12 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
             // blockchain e le manda a tutti
         }
     }
+
+    public LinkedList<Block> getMissingBlocks(byte[] hash) throws RemoteException {
+        return blockchain.getMissingBlocks(hash);
+    }
+
+
 
     public void addRegistry(RegistryInterface reg) {
         synchronized (registryList) {
@@ -720,36 +729,21 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     ie.printStackTrace();
                     System.exit(1);
                 }
-
-                // Mappa profondità frequenza
-                Map<Integer, Integer> poll = new HashMap<>();
-
-
-                //complessità folle, da sistemare in futuro
-                //non ci sincronizziamo su minerList, non è un problema perdere un miner perchè non più attivo
-                int maxDepth = -1;
-                while (maxDepth == -1) {
-                    for (MinerInterface miner : minersIPList) {
-                        try {
-                            int depth = miner.depthOfTheBlock(blockchain.lastBlock().getHash());
-                            if (poll.containsKey(depth)) {
-                                poll.replace(depth, poll.get(depth) + 1);
-                            } else {
-                                poll.put(depth, 1);
-                            }
-                        } catch (RemoteException re) {
-                            re.printStackTrace();
-                            System.exit(1);
-                        }
-                    }
-                    maxDepth = 0;
-                    int maxFreq = 0;
-                    for (Integer i : poll.keySet()) {
-                        if (poll.get(i) > maxFreq) {
-                            maxDepth = i;
-                        }
-                    }
-                }
+                /*
+                 * // Mappa profondità frequenza Map<Integer, Integer> poll = new HashMap<>();
+                 * 
+                 * 
+                 * //complessità folle, da sistemare in futuro //non ci sincronizziamo su
+                 * minerList, non è un problema perdere un miner perchè non più attivo int
+                 * maxDepth = -1; int currentDepth = blockchain.length()-1; while (maxDepth ==
+                 * -1) { for (MinerInterface miner : minersIPList) { try { int depth =
+                 * miner.depthOfTheBlock(blockchain.hashGivenDepth(currentDepth)); if
+                 * (poll.containsKey(depth)) { poll.replace(depth, poll.get(depth) + 1); } else
+                 * { poll.put(depth, 1); } } catch (RemoteException re) { re.printStackTrace();
+                 * System.exit(1); } } maxDepth = -1; int maxFreq = 0; for (Integer i :
+                 * poll.keySet()) { if (poll.get(i) > maxFreq) { maxDepth = i; } }
+                 * currentDepth--; }
+                 */
 
                 // chiedi tutti blocchi a partire dall'ultimo che ho e inseriscili in testa a
                 // blocktosend
@@ -761,7 +755,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         LinkedList<Block> blockList = new LinkedList<>();
                         try {
                             // System.out.println("Chiedo lista blocchi a miner");
-                            blockList = miner.getBlocksGivenLength(maxDepth);
+                             blockList = miner.getMissingBlocks(blockchain.lastBlock().getHash());
+                            
                         } catch (RemoteException re) {
                             re.printStackTrace();
                             System.exit(1);
