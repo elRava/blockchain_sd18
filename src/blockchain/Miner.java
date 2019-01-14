@@ -91,6 +91,12 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         return blockchain;
     }
 
+    public void setBlockchain(Blockchain blockchain) {
+        synchronized (blockchain) {
+            this.blockchain = blockchain;
+        }
+    }
+
     public void setNumberMinerThread(int numberMinerThread) {
         if (numberMinerThread <= 0) {
             throw new NumberFormatException("The number of miner threads must be > 0");
@@ -637,6 +643,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                                     "Blockchain last block: " + Block.hashToString(blockchain.lastBlock().getHash()));
 
                             blockchain.print("blockchain/print/M" + myPort + ".txt");
+                            String fileName = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(System.currentTimeMillis()));
+                            blockchain.backup("blockchain/backup/blockchain/M" + myPort + "_blockchain" + fileName + ".txt");
                         }
                     }
                     // System.out.println("esco");

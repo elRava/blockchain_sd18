@@ -167,20 +167,12 @@ public class Blockchain implements Serializable {
         return last.depth + 1;
     }
 
-/*
-    public byte[] getFatherHash(byte[] hash) {
-        Iterator<Block> it = this.getIterator();
-        while(it.hasNext()) {
-            Block b = it.next();
-            // if hash is of the genesis it throws NullPointerException, which is right
-            if(b.getHash().equals(hash)) {
-                return b.getPreviousHash();
-            }
-        }
-        return null;
-    }
-*/
-
+    /*
+     * public byte[] getFatherHash(byte[] hash) { Iterator<Block> it =
+     * this.getIterator(); while(it.hasNext()) { Block b = it.next(); // if hash is
+     * of the genesis it throws NullPointerException, which is right
+     * if(b.getHash().equals(hash)) { return b.getPreviousHash(); } } return null; }
+     */
 
     public LinkedList<Block> getMissingBlocks(byte[] hash) {
 
@@ -188,23 +180,23 @@ public class Blockchain implements Serializable {
         LinkedList<Block> returnList = new LinkedList<>();
 
         Ring iter = this.last;
-        while(iter.father != null) {
+        while (iter.father != null) {
 
             returnList.addFirst(iter.block);
             queue.addLast(iter);
 
-            while(!queue.isEmpty()) {
+            while (!queue.isEmpty()) {
                 Ring current = queue.removeFirst();
-                if(current.block.getHash().equals(hash)) {
+                if (current.block.getHash().equals(hash)) {
                     return returnList;
                 }
-                for(Ring son : current.sons) {
-                    if(!son.block.getHash().equals(returnList.getFirst().getHash())) {
+                for (Ring son : current.sons) {
+                    if (!son.block.getHash().equals(returnList.getFirst().getHash())) {
                         queue.addLast(son);
                     }
                 }
             }
-            
+
             iter = iter.father;
         }
         // se non contiene blocco hash return tutta la blockchain
@@ -325,6 +317,47 @@ public class Blockchain implements Serializable {
             System.out.println("Error: " + e);
             // System.exit(1);
         }
+    }
+
+    public void backup(String path) {
+        synchronized (this) {
+            ObjectOutputStream oos = null;
+            try {
+                File backup = new File(path);
+                backup.createNewFile();
+                oos = new ObjectOutputStream(new FileOutputStream(backup));
+                oos.writeObject(this);
+                oos.flush();
+                oos.close();
+            } catch (FileNotFoundException fnfe) {
+                fnfe.printStackTrace();
+                System.exit(1);
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+                System.exit(1);
+            }
+        }
+    }
+
+    public static Blockchain restore(File backup) {
+        ObjectInputStream ois = null;
+        try {
+            ois = new ObjectInputStream(new FileInputStream(backup));
+            Blockchain bc = (Blockchain) ois.readObject();
+            ois.close();
+            return bc;
+        } catch (FileNotFoundException fnfe) {
+            fnfe.printStackTrace();
+            System.exit(1);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+            System.exit(1);
+        } catch (ClassNotFoundException cnfe) {
+            cnfe.printStackTrace();
+            System.exit(1);
+        }
+        return new Blockchain();
+
     }
 
     private class BlockchainIterator implements Iterator<Block> {

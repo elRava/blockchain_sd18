@@ -35,6 +35,7 @@ public class MinerApplication {
         boolean fromBackup = false;
         Miner min = null;
         ArrayList<InetSocketAddress> listReg = new ArrayList<>();
+        Blockchain bcToRestore = null;
 
         // read parameters from command line
         if (args.length % 2 != 0) {
@@ -54,6 +55,9 @@ public class MinerApplication {
                 }
             } else if (args[i].equals("-t")) {
                 numberThread = Integer.valueOf(args[++i]);
+            } else if (args[i].equals("-b")) {
+                String path = args[++i];
+                bcToRestore = Blockchain.restore(new File(path));
             }
         }
         if (portMiner == -1) {
@@ -72,6 +76,9 @@ public class MinerApplication {
             // messa nel costruttore del miner
             min.setPort(portMiner);
             min.setNumberMinerThread(numberThread);
+            if(bcToRestore != null) {
+                min.setBlockchain(bcToRestore);
+            }
             r.rebind("miner", min);
 
             System.out
