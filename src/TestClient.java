@@ -2,6 +2,8 @@ import registry.*;
 import java.security.*;
 import java.util.*;
 import blockchain.*;
+import poll.Vote;
+
 import java.sql.Timestamp;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -439,7 +441,9 @@ public class TestClient {
 
             System.out.println("Creo b1");
 
-            Transaction t1 = new Transaction(5, pubAlice, pubBob);
+            Vote v = new Vote("lega nerd", "MOZZECANE 1", pubAlice);
+            v.sign(priAlice);
+            Transaction t1 = new Transaction(v, pubAlice, pubBob);
             t1.sign(priAlice);
 
             // test block thread
