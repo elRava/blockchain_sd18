@@ -88,6 +88,12 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         return blockchain;
     }
 
+    public void setBlockchain(Blockchain blockchain) {
+        synchronized(blockchain) {
+            this.blockchain = blockchain;
+        }
+    }
+
     public void setNumberMinerThread(int numberMinerThread) {
         if (numberMinerThread <= 0) {
             throw new NumberFormatException("The number of miner threads must be > 0");
@@ -273,7 +279,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             // System.out.println("Correttamente registrato");
                             addressFromThis = actual.getIPSet();
                         } catch (RemoteException re) {
-                            re.printStackTrace();
+                            //re.printStackTrace();
                         }
                         // if a remoteexcpetion has been thrown address from list will be null
                         if (addressFromThis != null) {
