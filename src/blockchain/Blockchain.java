@@ -296,7 +296,7 @@ public class Blockchain implements Serializable {
             print.createNewFile();
             write = new PrintStream(print);
             Iterator<Block> iter = this.getIterator();
-            System.out.println("Print Blockchain");
+            //System.out.println("Print Blockchain");
             int depth = this.length();
             while (iter.hasNext()) {
                 Block b = iter.next();

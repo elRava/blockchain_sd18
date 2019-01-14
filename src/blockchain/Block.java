@@ -366,7 +366,7 @@ public class Block implements Serializable {
          */
         public void run() {
 
-            System.out.println("Creato " + Thread.currentThread().getName());
+            //System.out.println("Creato " + Thread.currentThread().getName());
 
             while(true) {
 

@@ -105,20 +105,20 @@ public class MinerApplication {
             min.clearRegistry();
             for (int i = 0; i < listReg.size(); i++) {
                 RegistryInterface reg = null;
-                String IPReg = listReg.get(i).getHostName() + ":" + listReg.get(i).getPort();
+                String IPReg = listReg.get(i).getAddress().getHostAddress() + ":" + listReg.get(i).getPort();
                 try {
                     reg = (RegistryInterface) Naming.lookup("//" + IPReg + "/registry");
                 } catch (RemoteException re) {
-                    System.err.println("Registry" + IPReg + "not reachable");
+                    System.err.println("Registry " + IPReg + " not reachable");
                     // re.printStackTrace();
                     reg = null;
                 } catch (NotBoundException nbe) {
                     // nbe.printStackTrace();
-                    System.err.println("Registry" + IPReg + "not reachable");
+                    System.err.println("Registry " + IPReg + " not reachable");
                     reg = null;
                 } catch (MalformedURLException mue) {
                     // mue.printStackTrace();
-                    System.err.println("Registry" + IPReg + "not reachable");
+                    System.err.println("Registry " + IPReg + " not reachable");
                     reg = null;
                 }
                 if (reg != null) {
