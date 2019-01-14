@@ -740,7 +740,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 }
             }
             // I will mine this block
-
+            
             Block b = new Block();
 
             // Iterator through the list of transaction
