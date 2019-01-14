@@ -717,7 +717,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 while (pendingTransactions.isEmpty()) {
                     try {
                         //System.out.println("dorme num Transact: " + pendingTransactions.size());
-                        System.out.println("Miner not working");
+                        System.out.println("Miner sleeping");
                         pendingTransactions.wait();
                     } catch (InterruptedException ie) {
                         ie.printStackTrace();
