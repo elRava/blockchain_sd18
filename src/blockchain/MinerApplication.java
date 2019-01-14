@@ -76,7 +76,7 @@ public class MinerApplication {
             // messa nel costruttore del miner
             min.setPort(portMiner);
             min.setNumberMinerThread(numberThread);
-            if(bcToRestore != null) {
+            if (bcToRestore != null) {
                 min.setBlockchain(bcToRestore);
             }
             r.rebind("miner", min);
@@ -100,42 +100,43 @@ public class MinerApplication {
             /*
              * int portReg = 7867; String ip = "192.168.1.72";
              */
-            //It cleans the registry list on the miner
-            //it's updated with only the working registry every iteration
-            min.clearRegistry();
-            for (int i = 0; i < listReg.size(); i++) {
-                RegistryInterface reg = null;
-                String IPReg = listReg.get(i).getAddress().getHostAddress() + ":" + listReg.get(i).getPort();
-                try {
-                    reg = (RegistryInterface) Naming.lookup("//" + IPReg + "/registry");
-                } catch (RemoteException re) {
-                    System.err.println("Registry " + IPReg + " not reachable");
-                    // re.printStackTrace();
-                    reg = null;
-                } catch (NotBoundException nbe) {
-                    // nbe.printStackTrace();
-                    System.err.println("Registry " + IPReg + " not reachable");
-                    reg = null;
-                } catch (MalformedURLException mue) {
-                    // mue.printStackTrace();
-                    System.err.println("Registry " + IPReg + " not reachable");
-                    reg = null;
+            // It cleans the registry list on the miner
+            // it's updated with only the working registry every iteration
+            synchronized (min) {
+                min.clearRegistry();
+                for (int i = 0; i < listReg.size(); i++) {
+                    RegistryInterface reg = null;
+                    String IPReg = listReg.get(i).getAddress().getHostAddress() + ":" + listReg.get(i).getPort();
+                    try {
+                        reg = (RegistryInterface) Naming.lookup("//" + IPReg + "/registry");
+                    } catch (RemoteException re) {
+                        System.err.println("Registry " + IPReg + " not reachable");
+                        // re.printStackTrace();
+                        reg = null;
+                    } catch (NotBoundException nbe) {
+                        // nbe.printStackTrace();
+                        System.err.println("Registry " + IPReg + " not reachable");
+                        reg = null;
+                    } catch (MalformedURLException mue) {
+                        // mue.printStackTrace();
+                        System.err.println("Registry " + IPReg + " not reachable");
+                        reg = null;
+                    }
+                    if (reg != null) {
+                        min.addRegistry(reg);
+                    }
                 }
-                if (reg != null) {
-                    min.addRegistry(reg);
+                // Miner is started only the first Time
+                if (firstTime) {
+                    min.startThreads();
                 }
+                firstTime = false;
             }
-            //Miner is started only the first Time
-            if (firstTime) {
-                min.startThreads();
-            }
-            firstTime = false;
-            try{
+            try {
                 Thread.sleep(20000);
-            }catch(InterruptedException ie){
-                //ie.printStackTrace();
+            } catch (InterruptedException ie) {
+                // ie.printStackTrace();
             }
-            
 
         }
         // min.chooseBlockchain();
