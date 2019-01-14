@@ -89,7 +89,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     }
 
     public void setBlockchain(Blockchain blockchain) {
-        synchronized(blockchain) {
+        synchronized (blockchain) {
             this.blockchain = blockchain;
         }
     }
@@ -125,8 +125,6 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     public LinkedList<Block> getMissingBlocks(byte[] hash) throws RemoteException {
         return blockchain.getMissingBlocks(hash);
     }
-
-
 
     public void addRegistry(RegistryInterface reg) {
         synchronized (registryList) {
@@ -279,7 +277,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             // System.out.println("Correttamente registrato");
                             addressFromThis = actual.getIPSet();
                         } catch (RemoteException re) {
-                            //re.printStackTrace();
+                            // re.printStackTrace();
                         }
                         // if a remoteexcpetion has been thrown address from list will be null
                         if (addressFromThis != null) {
@@ -594,6 +592,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                                     "Blockchain last block: " + Block.hashToString(blockchain.lastBlock().getHash()));
 
                             blockchain.print("blockchain/print/M" + myPort + ".txt");
+                            String fileName = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(System.currentTimeMillis()));
+                            blockchain.backup("blockchain/backup/blockchain/M" + myPort + "_blockchain" + fileName + ".txt");
                         }
                     }
                     // System.out.println("esco");
@@ -761,8 +761,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         LinkedList<Block> blockList = new LinkedList<>();
                         try {
                             // System.out.println("Chiedo lista blocchi a miner");
-                             blockList = miner.getMissingBlocks(blockchain.lastBlock().getHash());
-                            
+                            blockList = miner.getMissingBlocks(blockchain.lastBlock().getHash());
+
                         } catch (RemoteException re) {
                             re.printStackTrace();
                             System.exit(1);
