@@ -20,7 +20,7 @@ import java.nio.charset.*;
 
 public class Transaction implements Serializable{
 
-    private Object payload;
+    private Verifiable payload;
     private Timestamp creationTime;
     private PublicKey keySrc;
     private PublicKey keyDst;
@@ -33,7 +33,7 @@ public class Transaction implements Serializable{
      * @param keySrc public key of the source
      * @param keyDst public key of the destination
      */
-    public Transaction(Object payload, PublicKey keySrc, PublicKey keyDst) {
+    public Transaction(Verifiable payload, PublicKey keySrc, PublicKey keyDst) {
         this.payload = payload;
         this.keySrc = keySrc;
         this.keyDst = keyDst;
@@ -60,6 +60,11 @@ public class Transaction implements Serializable{
     public boolean equals(Object o) {
         if(! (o instanceof Transaction)) {
             return false;
+        }
+        // unique interface says that the payload of the transaction must be unique on the blockchain
+        // with respect to .equals implemented on the payload class
+        if(this.payload instanceof Unique) {
+            return this.payload.equals(((Transaction) o).payload);
         }
         if(Block.hashToString(this.transactionHash).equals(Block.hashToString(((Transaction) o).getHash()))) {
             return true;
@@ -148,7 +153,7 @@ public class Transaction implements Serializable{
         }catch(SignatureException se){
             se.printStackTrace();
         }    
-        return verified;
+        return verified && this.payload.verify();
     }
 
     /**
