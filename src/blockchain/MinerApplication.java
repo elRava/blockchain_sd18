@@ -60,57 +60,78 @@ public class MinerApplication {
             portMiner = Miner.DEFAULT_PORT;
         }
 
+        boolean firstTime = true;
+
         try {
             // very bad mistake calling calss Registry while exists another calss Registry
             // on java RMI
             java.rmi.registry.Registry r = LocateRegistry.createRegistry(portMiner);
             min = new Miner();
+
             // porta di default presa automaticamente se non viene settata qua
             // messa nel costruttore del miner
             min.setPort(portMiner);
             min.setNumberMinerThread(numberThread);
             r.rebind("miner", min);
-            // System.setProperty("java.rmi.server.hostname", "192.168.1.224");
-            // System.out.println("......." + InetAddress.getLocalHost().getHostAddress());
-            // InetAddre
+
             System.out
                     .println("Miner bound at //" + Miner.getMyAddress().getHostAddress() + ":" + portMiner + "/miner");
+
             /*
              * if(fromBackup) { System.out.println("Restoring registry from backup");
              * reg.restore(new File(path));
              * System.out.println("Registry restored from backup"); }
              */
+
         } catch (RemoteException re) {
             re.printStackTrace();
             System.exit(1);
         }
 
-        /*
-         * int portReg = 7867; String ip = "192.168.1.72";
-         */
-        for (int i = 0; i < listReg.size(); i++) {
-            RegistryInterface reg = null;
-            try {
-                reg = (RegistryInterface) Naming
-                        .lookup("//" + listReg.get(i).getHostName() + ":" + listReg.get(i).getPort() + "/registry");
-            } catch (RemoteException re) {
-                re.printStackTrace();
-                reg = null;
-            } catch (NotBoundException nbe) {
-                nbe.printStackTrace();
-                reg = null;
-            } catch (MalformedURLException mue) {
-                mue.printStackTrace();
-                reg = null;
+        while (true) {
+
+            /*
+             * int portReg = 7867; String ip = "192.168.1.72";
+             */
+            //It cleans the registry list on the miner
+            //it's updated with only the working registry every iteration
+            min.clearRegistry();
+            for (int i = 0; i < listReg.size(); i++) {
+                RegistryInterface reg = null;
+                String IPReg = listReg.get(i).getHostName() + ":" + listReg.get(i).getPort();
+                try {
+                    reg = (RegistryInterface) Naming.lookup("//" + IPReg + "/registry");
+                } catch (RemoteException re) {
+                    System.err.println("Registry" + IPReg + "not reachable");
+                    // re.printStackTrace();
+                    reg = null;
+                } catch (NotBoundException nbe) {
+                    // nbe.printStackTrace();
+                    System.err.println("Registry" + IPReg + "not reachable");
+                    reg = null;
+                } catch (MalformedURLException mue) {
+                    // mue.printStackTrace();
+                    System.err.println("Registry" + IPReg + "not reachable");
+                    reg = null;
+                }
+                if (reg != null) {
+                    min.addRegistry(reg);
+                }
             }
-            if (reg != null) {
-                min.addRegistry(reg);
+            //Miner is started only the first Time
+            if (firstTime) {
+                min.startThreads();
             }
+            firstTime = false;
+            try{
+                Thread.sleep(20000);
+            }catch(InterruptedException ie){
+                //ie.printStackTrace();
+            }
+            
+
         }
-
-        min.startThreads();
-
-        //min.chooseBlockchain();
+        // min.chooseBlockchain();
 
         /*
          * RegistryApplication ra = new RegistryApplication(); CleanThread ct = ra.new

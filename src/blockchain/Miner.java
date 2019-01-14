@@ -15,6 +15,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.omg.CORBA.portable.RemarshalException;
 
+import java.io.BufferedReader;
+import java.io.*;
+import java.io.ObjectInputStream;
 import java.net.*;
 import registry.*;
 import java.rmi.server.*;
@@ -120,11 +123,15 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         return blockchain.getMissingBlocks(hash);
     }
 
-
-
     public void addRegistry(RegistryInterface reg) {
         synchronized (registryList) {
             registryList.add(reg);
+        }
+    }
+
+    public void clearRegistry() {
+        synchronized (registryList) {
+            registryList.clear();
         }
     }
 
@@ -273,13 +280,55 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             // System.out.println("Correttamente registrato");
                             addressFromThis = actual.getIPSet();
                         } catch (RemoteException re) {
-                            re.printStackTrace();
+                            // re.printStackTrace();
                         }
                         // if a remoteexcpetion has been thrown address from list will be null
                         if (addressFromThis != null) {
                             updatedMinerList.addAll(addressFromThis);
                         }
                     }
+                }
+
+                // read the list from the file, adding to updateMinerList
+                String backup = "backup/miner/miner.txt";
+                BufferedReader reader = null;
+                String line = null;
+                try {
+                    reader = new BufferedReader(new FileReader(backup));
+                    while ((line = reader.readLine()) != null) {
+                        String[] min = line.split(":");
+                        InetSocketAddress isa = new InetSocketAddress(min[0], Integer.parseInt(min[1]));
+                        if (!updatedMinerList.contains(isa)) {
+                            updatedMinerList.add(isa);
+                        }
+                    }
+                    reader.close();
+                } catch (FileNotFoundException fnfe) {
+                    // fnfe.printStackTrace();
+                    // First iteration the file has not already been created
+                    // System.exit(1);
+                } catch (IOException ioe) {
+                    //ioe.printStackTrace();
+                    System.err.println("Invalid addreass during reading from the backup");
+                    // System.exit(1);
+                }
+
+                // save the list on file
+                // String str = "World";
+                File f = new File(backup);
+                // FileWriter fileWriter = new FileWriter(f);
+                PrintWriter printWriter = null;
+                // BufferedWriter writer = new BufferedWriter(new FileWriter(f));
+                Iterator<InetSocketAddress> iter = updatedMinerList.iterator();
+                try {
+                    printWriter = new PrintWriter(f);
+                    while (iter.hasNext()) {
+                        InetSocketAddress current = iter.next();
+                        printWriter.append("" + current.getAddress().getHostAddress() + ":" + current.getPort());
+                    }
+                } catch (FileNotFoundException fnf) {
+                    System.err.println("Invalid Address of local backup");
+                    //fnf.printStackTrace();
                 }
 
                 // System.out.println("Tutti i miner che ricevo dal registry sono: " +
@@ -755,8 +804,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         LinkedList<Block> blockList = new LinkedList<>();
                         try {
                             // System.out.println("Chiedo lista blocchi a miner");
-                             blockList = miner.getMissingBlocks(blockchain.lastBlock().getHash());
-                            
+                            blockList = miner.getMissingBlocks(blockchain.lastBlock().getHash());
+
                         } catch (RemoteException re) {
                             re.printStackTrace();
                             System.exit(1);
