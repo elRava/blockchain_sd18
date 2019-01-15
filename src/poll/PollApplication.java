@@ -90,10 +90,10 @@ public class PollApplication {
             RegistryInterface reg = null;
 
             try {
-                reg = (RegistryInterface) Naming.lookup("//" + addr + "/registry");
+                reg = (RegistryInterface) Naming.lookup("//" + addr.getAddress().getHostAddress() + ":" + addr.getPort() + "/registry");
                 ArrayList<InetSocketAddress> listMiners = reg.getIPSet();
                 for (InetSocketAddress minAdd : listMiners) {
-                    MinerInterface min = (MinerInterface) Naming.lookup("//" + minAdd + "/miner");
+                    MinerInterface min = (MinerInterface) Naming.lookup("//" + minAdd.getAddress().getHostAddress() + ":" + minAdd.getPort() + "/miner");
                     minersBlockchain.put(min.getBlockchainHash(), min);
                 }
             } catch (RemoteException re) {
@@ -204,11 +204,13 @@ public class PollApplication {
                 String seat = v.getSeat();
                 String pubKey = Base64.getEncoder().encodeToString(v.getPublicKey().getEncoded());
 
+                //System.out.println("vote:" + vote);
+
                 // check if the public key is contained in the list of the keys
                 // and the seat is contained on the list of the seats
                 if (listParties.contains(vote) && listKeys.contains(pubKey) && listSeats.contains(seat)) {
                     if (votes.containsKey(vote)) {
-                        votes.replace(vote, votes.get(vote + 1));
+                        votes.replace(vote, votes.get(vote) + 1);
                     } else {
                         votes.put(vote, 1);
                     }
