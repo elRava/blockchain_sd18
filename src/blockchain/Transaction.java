@@ -16,19 +16,18 @@ import java.io.*;
 import java.security.MessageDigest;
 import java.nio.charset.*;
 
-
-
-public class Transaction implements Serializable{
+public class Transaction implements Serializable {
 
     private Verifiable payload;
     private Timestamp creationTime;
     private PublicKey keySrc;
-    //private PublicKey keyDst;
+    // private PublicKey keyDst;
     private byte[] signature;
     private byte[] transactionHash;
- 
+
     /**
      * Constructor of the transaction
+     * 
      * @param paylod content of the transaction
      * @param keySrc public key of the source
      * @param keyDst public key of the destination
@@ -36,7 +35,7 @@ public class Transaction implements Serializable{
     public Transaction(Verifiable payload, PublicKey keySrc) {
         this.payload = payload;
         this.keySrc = keySrc;
-        //this.keyDst = keyDst;
+        // this.keyDst = keyDst;
         this.signature = null;
         this.transactionHash = null;
         setCurrentTime();
@@ -44,6 +43,7 @@ public class Transaction implements Serializable{
 
     /**
      * Get the hash of the transaction
+     * 
      * @return the hash of the transaction after it is calculated
      */
     public byte[] getHash() {
@@ -58,119 +58,131 @@ public class Transaction implements Serializable{
     }
 
     /**
-     * Override Object equals method
-     * Two Transactions are considered equal if they have the same hash
+     * Override Object equals method Two Transactions are considered equal if they
+     * have the same hash
+     * 
      * @param o the object that we want to compare
      * @return if the object is equal to this
      */
     @Override
     public boolean equals(Object o) {
-        if(! (o instanceof Transaction)) {
+        if (!(o instanceof Transaction)) {
             return false;
         }
-        // unique interface says that the payload of the transaction must be unique on the blockchain
+        // unique interface says that the payload of the transaction must be unique on
+        // the blockchain
         // with respect to .equals implemented on the payload class
-        if(this.payload instanceof Unique) {
+        if (this.payload instanceof Unique) {
             return this.payload.equals(((Transaction) o).payload);
         }
-        if(Block.hashToString(this.transactionHash).equals(Block.hashToString(((Transaction) o).getHash()))) {
+        if (Block.hashToString(this.transactionHash).equals(Block.hashToString(((Transaction) o).getHash()))) {
             return true;
         }
         return false;
     }
 
     /**
-     * TODO: Use the timestamp provided by NTP server
-     * Set the timestamp of transaction
+     * TODO: Use the timestamp provided by NTP server Set the timestamp of
+     * transaction
      */
-    private void setCurrentTime(){
-        /*String TIME_SERVER = "time-a.nist.gov";   //server a cui chiedere orario
-        NTPUDPClient timeClient = new NTPUDPClient();   //client che fa richiesta per il Network time protocol
-        InetAddress inetAddress = InetAddress.getByName(TIME_SERVER);   //collegamento al server
-        TimeInfo timeInfo = timeClient.getTime(inetAddress);    //ora che ritorna dal server è nell'oggetto TimeInfo
-        //long returnTime = timeInfo.getMessage().getTransmitTimeStamp().getTime();
-        long returnTime = timeInfo.getMessage().getReceiveTimeStamp().getTime();
-        this.creationTime = returnTime;*/
-        this.creationTime = new Timestamp(System.currentTimeMillis());        
+    private void setCurrentTime() {
+        /*
+         * String TIME_SERVER = "time-a.nist.gov"; //server a cui chiedere orario
+         * NTPUDPClient timeClient = new NTPUDPClient(); //client che fa richiesta per
+         * il Network time protocol InetAddress inetAddress =
+         * InetAddress.getByName(TIME_SERVER); //collegamento al server TimeInfo
+         * timeInfo = timeClient.getTime(inetAddress); //ora che ritorna dal server è
+         * nell'oggetto TimeInfo //long returnTime =
+         * timeInfo.getMessage().getTransmitTimeStamp().getTime(); long returnTime =
+         * timeInfo.getMessage().getReceiveTimeStamp().getTime(); this.creationTime =
+         * returnTime;
+         */
+        this.creationTime = new Timestamp(System.currentTimeMillis());
     }
+
     public byte[] getSignature() {
         return signature;
     }
 
     /**
-     * Set the hash of the transaction
-     * Hash will be timestamp + payload + keySrc + keyDst
+     * Set the hash of the transaction Hash will be timestamp + payload + keySrc +
+     * keyDst
      */
-    private void setHash(){
-        //String keyDestString = Base64.getEncoder().encodeToString(keyDst.getEncoded());
+    private void setHash() {
+        // String keyDestString =
+        // Base64.getEncoder().encodeToString(keyDst.getEncoded());
         String keySrcString = Base64.getEncoder().encodeToString(keySrc.getEncoded());
-        //String s = creationTime.toString()+payload.toString()+keyDestString+keySrcString;
-        String s = creationTime.toString()+payload.toString()+keySrcString;
-        try {            
+        // String s =
+        // creationTime.toString()+payload.toString()+keyDestString+keySrcString;
+        String s = creationTime.toString() + payload.toString() + keySrcString;
+        try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             transactionHash = digest.digest(s.getBytes("UTF-8"));
-        }catch(NoSuchAlgorithmException nsae){
+        } catch (NoSuchAlgorithmException nsae) {
             nsae.printStackTrace();
-        }catch(UnsupportedEncodingException uee){
+        } catch (UnsupportedEncodingException uee) {
             uee.printStackTrace();
-        } 
+        }
     }
 
     /**
      * Sign the transaction hash
+     * 
      * @param privateKey the source private key
      */
     public void sign(PrivateKey privateKey) {
-        //set the hash of the transaction
+        // set the hash of the transaction
         setHash();
-        try{
-            //use RSA
+        try {
+            // use RSA
             Signature ecdsa = Signature.getInstance("SHA1WithRSA");
-            //sign the messagge with the privat key
+            // sign the messagge with the privat key
             ecdsa.initSign(privateKey);
             ecdsa.update(transactionHash);
-            //signature is the encrypted transaction hash
+            // signature is the encrypted transaction hash
             signature = ecdsa.sign();
-        }catch(NoSuchAlgorithmException nsae){
+        } catch (NoSuchAlgorithmException nsae) {
             nsae.printStackTrace();
-        }catch(InvalidKeyException ike){
+        } catch (InvalidKeyException ike) {
             ike.printStackTrace();
-        }catch(SignatureException se){
+        } catch (SignatureException se) {
             se.printStackTrace();
         }
-                   
+
     }
 
     /**
      * Verify if the transaction is valid
+     * 
      * @return true if it is valid, false otherwise
      */
     public boolean verify() {
-        //look if same field are modified, hashing again the transactio
+        // look if same field are modified, hashing again the transactio
         setHash();
         boolean verified = false;
         try {
-			Signature ecdsaVerify = Signature.getInstance("SHA1WithRSA");
-			ecdsaVerify.initVerify(keySrc);
-			ecdsaVerify.update(transactionHash);
-			verified = ecdsaVerify.verify(signature);
-		}catch(NoSuchAlgorithmException nsae){
+            Signature ecdsaVerify = Signature.getInstance("SHA1WithRSA");
+            ecdsaVerify.initVerify(keySrc);
+            ecdsaVerify.update(transactionHash);
+            verified = ecdsaVerify.verify(signature);
+        } catch (NoSuchAlgorithmException nsae) {
             nsae.printStackTrace();
-        }catch(InvalidKeyException ike){
+        } catch (InvalidKeyException ike) {
             ike.printStackTrace();
-        }catch(SignatureException se){
+        } catch (SignatureException se) {
             se.printStackTrace();
-        }    
+        }
+        System.out.println("Verified:" + verified + " payload.verify:" + payload.verify());
         return verified && this.payload.verify();
     }
 
     /**
      * Get the hash of the transaction
+     * 
      * @return hash
      */
-    public byte[] getTransactionHash(){       
+    public byte[] getTransactionHash() {
         return transactionHash;
     }
 
-  
 }

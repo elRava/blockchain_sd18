@@ -8,6 +8,7 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 
+
 import blockchain.*;
 
 @SuppressWarnings("overrides")
@@ -83,6 +84,10 @@ public class Vote implements Verifiable, Unique, Serializable {
         }
         // I consider two votes of the same public key = the same person, equals
         return publicKey.equals(((Vote) o).publicKey);
+    }
+
+    public String toString() {
+        return vote + " " + seat + " " + publicKey.toString();
     }
 
 }
