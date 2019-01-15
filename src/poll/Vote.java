@@ -1,5 +1,6 @@
 package poll;
 
+import java.io.Serializable;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -10,7 +11,7 @@ import java.security.SignatureException;
 import blockchain.*;
 
 @SuppressWarnings("overrides")
-public class Vote implements Verifiable, Unique {
+public class Vote implements Verifiable, Unique, Serializable {
 
     private String vote;
     private String seat; // seggio

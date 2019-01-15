@@ -213,7 +213,7 @@ public class VoteApplication {
         boolean valid = false;
         int r = -1;
         while (!valid) {
-            System.out.println("Which party would you like to vote? \n Write the number realted to it");
+            System.out.println("Which party would you like to vote? \n Write the number related to it");
             try {
                 r = Integer.parseInt(in.nextLine());
                 if (r > 0 && r <= allParties.size()) {
