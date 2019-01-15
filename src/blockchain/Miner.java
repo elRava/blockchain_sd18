@@ -91,6 +91,10 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         return blockchain;
     }
 
+    public byte[] getBlockchainHash() throws RemoteException {
+        return blockchain.getHash();
+    }
+
     public void setBlockchain(Blockchain blockchain) {
         synchronized (blockchain) {
             this.blockchain = blockchain;

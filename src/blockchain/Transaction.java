@@ -51,6 +51,13 @@ public class Transaction implements Serializable{
     }
 
     /**
+     * 
+     */
+    public Verifiable getPayload() {
+        return payload;
+    }
+
+    /**
      * Override Object equals method
      * Two Transactions are considered equal if they have the same hash
      * @param o the object that we want to compare

@@ -9,6 +9,7 @@ import java.security.SignatureException;
 
 import blockchain.*;
 
+@SuppressWarnings("overrides")
 public class Vote implements Verifiable, Unique {
 
     private String vote;
@@ -20,6 +21,22 @@ public class Vote implements Verifiable, Unique {
         this.vote = vote;
         this.seat = seat;
         this.publicKey = publicKey;
+    }
+
+    public String getVote() {
+        return vote;
+    }
+
+    public String getSeat() {
+        return seat;
+    }
+
+    public PublicKey getPublicKey() {
+        return publicKey;
+    }
+
+    public byte[] getSignature() {
+        return signature;
     }
 
     public boolean verify() {
