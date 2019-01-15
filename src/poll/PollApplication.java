@@ -64,6 +64,23 @@ public class PollApplication {
             }
         }
 
+        if(seatsPath == null) {
+            System.out.println("Missing seats list file");
+            System.exit(1);
+        }
+        if(keysPath == null) {
+            System.out.println("Missing public keys list file");
+            System.exit(1);
+        }
+        if(partiesPath == null) {
+            System.out.println("Missing parties list file");
+            System.exit(1);
+        }
+        if(listReg.isEmpty()) {
+            System.out.println("Missing registry");
+            System.exit(1);
+        }
+
         // get the blockchain and take the "best"
         Map<byte[], MinerInterface> minersBlockchain = new HashMap<>();
 
@@ -217,10 +234,12 @@ public class PollApplication {
                 }
             }
 
-            if (outputPath != null) {
+            if(outputPath != null) {
                 pw.close();
             }
-        } catch (FileNotFoundException fnfe) {
+
+
+        } catch(FileNotFoundException fnfe) {
             System.out.println("Cannot print the report since the file does not exist");
         }
 
