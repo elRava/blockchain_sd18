@@ -65,6 +65,19 @@ public class PollApplication {
             }
         }
 
+        if(seatsPath == null) {
+            System.out.println("Missing seats list file");
+            System.exit(1);
+        }
+        if(keysPath == null) {
+            System.out.println("Missing public keys list file");
+            System.exit(1);
+        }
+        if(partiesPath == null) {
+            System.out.println("Missing parties list file");
+            System.exit(1);
+        }
+
         // get the blockchain and take the "best"
         Map<byte[], MinerInterface> minersBlockchain = new HashMap<>();
 
@@ -218,6 +231,10 @@ public class PollApplication {
                 if(outputPath != null){
                     pw.println(e.getKey() + " - " + e.getValue());
                 }
+            }
+
+            if(outputPath != null) {
+                pw.close();
             }
 
 
