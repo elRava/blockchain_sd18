@@ -23,7 +23,7 @@ public class Transaction implements Serializable{
     private Verifiable payload;
     private Timestamp creationTime;
     private PublicKey keySrc;
-    private PublicKey keyDst;
+    //private PublicKey keyDst;
     private byte[] signature;
     private byte[] transactionHash;
  
@@ -33,10 +33,10 @@ public class Transaction implements Serializable{
      * @param keySrc public key of the source
      * @param keyDst public key of the destination
      */
-    public Transaction(Verifiable payload, PublicKey keySrc, PublicKey keyDst) {
+    public Transaction(Verifiable payload, PublicKey keySrc) {
         this.payload = payload;
         this.keySrc = keySrc;
-        this.keyDst = keyDst;
+        //this.keyDst = keyDst;
         this.signature = null;
         this.transactionHash = null;
         setCurrentTime();
@@ -102,9 +102,10 @@ public class Transaction implements Serializable{
      * Hash will be timestamp + payload + keySrc + keyDst
      */
     private void setHash(){
-        String keyDestString = Base64.getEncoder().encodeToString(keyDst.getEncoded());
+        //String keyDestString = Base64.getEncoder().encodeToString(keyDst.getEncoded());
         String keySrcString = Base64.getEncoder().encodeToString(keySrc.getEncoded());
-        String s = creationTime.toString()+payload.toString()+keyDestString+keySrcString;
+        //String s = creationTime.toString()+payload.toString()+keyDestString+keySrcString;
+        String s = creationTime.toString()+payload.toString()+keySrcString;
         try {            
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             transactionHash = digest.digest(s.getBytes("UTF-8"));

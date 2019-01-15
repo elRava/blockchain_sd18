@@ -1,4 +1,10 @@
+<<<<<<< HEAD
 Lega Nerd
 M5S
 PD
 Forza Italia
+=======
+Lega Nord
+Forza Italia
+PD
+>>>>>>> bea6a3eac6af8fb9b77d4fcc61ea4d39c7566cac
