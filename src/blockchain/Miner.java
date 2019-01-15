@@ -319,7 +319,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     // System.exit(1);
                 } catch (IOException ioe) {
                     // ioe.printStackTrace();
-                    System.err.println("Invalid address while reading from backup");
+                    //System.err.println("Invalid address while reading from backup");
                     // System.exit(1);
                 }
 
@@ -342,7 +342,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     printWriter.flush();
                     printWriter.close();
                 } catch (FileNotFoundException fnf) {
-                    System.err.println("Invalid Address of local backup");
+                    //System.err.println("Invalid Address of local backup");
                     // fnf.printStackTrace();
                 }
 
