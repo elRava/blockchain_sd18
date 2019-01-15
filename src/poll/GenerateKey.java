@@ -5,7 +5,6 @@ import java.security.*;
 import java.util.*;
 import java.lang.reflect.MalformedParametersException;
 
-import blockchain.*;
 
 import java.security.spec.*;
 
@@ -33,6 +32,7 @@ public class GenerateKey {
         File fileComplete = new File(pathComplete);
         PrintWriter complete = null;
 
+
         try {
             complete = new PrintWriter(fileComplete);
         } catch (IOException ioe) {
@@ -40,15 +40,12 @@ public class GenerateKey {
         }
 
         for (int i = 0; i < numKey; i++) {
-            PublicKey pub = null;
-            PrivateKey pri = null;
-            // ObjectOutputStream oosPub = null;
-            // ObjectOutputStream oosPri = null;
+            Key pub = null;
+            Key pri = null;
             try {
-
                 KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
                 // Inizializzo il key generator
-                keygen.initialize(1024);
+                keygen.initialize(2048);
                 KeyPair kp = keygen.genKeyPair();
                 pub = kp.getPublic();
                 pri = kp.getPrivate();
@@ -64,9 +61,11 @@ public class GenerateKey {
 
                 printOne.close();
 
-            } catch (FileNotFoundException fnfe) {
-                fnfe.printStackTrace();
-                // System.exit(1);
+             
+
+            } catch (IOException io) {
+                io.printStackTrace();
+
             } catch (NoSuchAlgorithmException nsae) {
                 nsae.printStackTrace();
             }
@@ -76,7 +75,7 @@ public class GenerateKey {
         complete.close();
 
         // Provo a leggere da file
-
+        /*
         BufferedReader reader = null;
         String line = null;
         PublicKey pu = null;
@@ -92,28 +91,60 @@ public class GenerateKey {
             reader.close();
         } catch (Exception fnfe) {
             fnfe.printStackTrace();
-            // First iteration the file has not already been created
-            // System.exit(1);
+        }*/
+
+    }
+
+    public static PrivateKey getPrivateFromFile(String path) {
+
+        BufferedReader reader = null;
+        String filename = null;
+        try{
+            reader = new BufferedReader(new FileReader(path));
+            reader.readLine();
+            filename = reader.readLine();
+        }catch(IOException ioe){
+            ioe.printStackTrace();
         }
+        byte[] bytes = Base64.getDecoder().decode(filename);
+        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(bytes);
+        KeyFactory kf = null;
+        PrivateKey pk = null;
+        try{
+            kf = KeyFactory.getInstance("RSA");
+            pk = kf.generatePrivate(privateKeySpec);
+        }catch(NoSuchAlgorithmException nsae){
+            nsae.printStackTrace();
+        }catch(InvalidKeySpecException ikse){
+            ikse.printStackTrace();
+        }
+        
+        return pk;
 
     }
 
-    public static PrivateKey getPri(String filename) throws Exception {
-
-        byte[] keyBytes = filename.getBytes();
-
-        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return kf.generatePrivate(spec);
-    }
-
-    public static PublicKey getPub(String filename) throws Exception {
-
-        byte[] keyBytes = filename.getBytes();
-
+    public static PublicKey getPublicFromFile(String path)  {
+        BufferedReader reader = null;
+        String filename = null;
+        try{
+            reader = new BufferedReader(new FileReader(path));            
+            filename = reader.readLine();
+        }catch(IOException ioe){
+            ioe.printStackTrace();
+        }
+        byte[] keyBytes = Base64.getDecoder().decode(filename);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return kf.generatePublic(spec);
+        KeyFactory kf = null;
+        PublicKey pk = null;
+        try{
+            kf = KeyFactory.getInstance("RSA");
+            pk = kf.generatePublic(spec);
+        }catch(NoSuchAlgorithmException nsae){
+            nsae.printStackTrace();
+        }catch(InvalidKeySpecException ikse){
+            ikse.printStackTrace();
+        }
+        return pk;
     }
 
 }
