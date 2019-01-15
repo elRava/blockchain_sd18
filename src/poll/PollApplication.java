@@ -77,6 +77,10 @@ public class PollApplication {
             System.out.println("Missing parties list file");
             System.exit(1);
         }
+        if(listReg.isEmpty()) {
+            System.out.println("Missing registry");
+            System.exit(1);
+        }
 
         // get the blockchain and take the "best"
         Map<byte[], MinerInterface> minersBlockchain = new HashMap<>();
