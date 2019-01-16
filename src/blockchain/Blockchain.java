@@ -92,9 +92,24 @@ public class Blockchain implements Serializable {
                 // The last block is the real last
                 // Generate the ring and set father and sons properly
                 Ring ring = new Ring(block);
+                
+                //Check if the transactions in block are already in the blockchain
+                List<Transaction> toAdd = block.getListTransactions();
+                Ring temp = current;
+                while(temp.father!=null){
+                    Block currentBlock = temp.block;
+                    for(Transaction t: toAdd){
+                        if(currentBlock.getListTransactions().contains(t)){
+                            return false;
+                        }
+                    }
+                    temp = temp.father;
+                }
+                               
+                
                 current.addSon(ring);
                 // the last block reference is related to bigger depth
-                if (ring.depth >= last.depth) {
+                if (ring.depth > last.depth) {
                     this.last = ring;
                 }
                 // The block is properly added to the chain
@@ -256,6 +271,23 @@ public class Blockchain implements Serializable {
             // I find the proper block
             // Like in addNode I create a ring and set its father
             Ring ring = new Ring(block);
+
+            //Check if the transactions in block are already in the blockchain
+            List<Transaction> toAdd = block.getListTransactions();
+            Ring temp = root;
+            while(temp.father!=null){
+                Block currentBlock = temp.block;
+                for(Transaction t: toAdd){
+                    if(currentBlock.getListTransactions().contains(t)){
+                        return false;
+                    }
+                }
+                temp = temp.father;
+            }
+
+
+
+
             root.addSon(ring);
 
             // update the last Ring
