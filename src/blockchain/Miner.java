@@ -26,7 +26,7 @@ import java.text.SimpleDateFormat;
 
 public class Miner extends UnicastRemoteObject implements MinerInterface {
 
-    public static final int DIFFICULTY = 6;
+    public static final int DIFFICULTY = 7;
     public static final int DEFAULT_PORT = 7392;
     public static final int DEFAULT_MINER_THREAD = 1;
     public static final int TRANSACTIONS_PER_BLOCK = 4;
@@ -73,7 +73,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         // chooseBlockchain();
         myPort = DEFAULT_PORT;
 
-        askBlocksSemaphore = new Semaphore(0);
+        // on first run, ask blocks
+        askBlocksSemaphore = new Semaphore(1);
         blocksRetrievedSemaphore = new Semaphore(0);
 
         numberMinerThread = DEFAULT_MINER_THREAD;
@@ -641,10 +642,13 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             }
 
                             // remove block's transaction from pending transactions
-                            synchronized (pendingTransactions) {
-                                for (Transaction t : b.getListTransactions()) {
-                                    // if not present does nothing
-                                    pendingTransactions.remove(t);
+                            // only if last added block is actually the last block
+                            if(blockchain.lastBlock().equals(b)) {
+                                synchronized (pendingTransactions) {
+                                    for (Transaction t : b.getListTransactions()) {
+                                        // if not present does nothing
+                                        pendingTransactions.remove(t);
+                                    }
                                 }
                             }
 
@@ -793,6 +797,13 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     private class AskBlocksThread implements Runnable {
 
         public void run() {
+
+            try {
+                // wait all other threads ready
+                Thread.sleep(1000);
+            } catch(InterruptedException ie) {
+
+            }
 
             while (true) {
 

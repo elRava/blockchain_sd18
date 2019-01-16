@@ -97,11 +97,11 @@ public class PollApplication {
                     minersBlockchain.put(min.getBlockchainHash(), min);
                 }
             } catch (RemoteException re) {
-                re.printStackTrace();
+                //re.printStackTrace();
             } catch (MalformedURLException mue) {
-                mue.printStackTrace();
+                //mue.printStackTrace();
             } catch (NotBoundException nbe) {
-                nbe.printStackTrace();
+                //nbe.printStackTrace();
             }
 
         }
@@ -131,7 +131,7 @@ public class PollApplication {
         try {
             blockchain = minersBlockchain.get(freq).getBlockchain();
         } catch (RemoteException re) {
-            re.printStackTrace();
+            //re.printStackTrace();
             System.exit(1);
         }
 
@@ -221,6 +221,7 @@ public class PollApplication {
 
         }
 
+        
 
         // now print the report
         PrintWriter pw = null;
