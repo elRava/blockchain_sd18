@@ -18,6 +18,7 @@ import java.util.*;
 import registry.*;
 import blockchain.*;
 
+
 /**
  * 
  * @author Giuseppe Ravagnani
@@ -96,11 +97,11 @@ public class PollApplication {
                     minersBlockchain.put(min.getBlockchainHash(), min);
                 }
             } catch (RemoteException re) {
-                re.printStackTrace();
+                //re.printStackTrace();
             } catch (MalformedURLException mue) {
-                mue.printStackTrace();
+                //mue.printStackTrace();
             } catch (NotBoundException nbe) {
-                nbe.printStackTrace();
+                //nbe.printStackTrace();
             }
 
         }
@@ -130,7 +131,7 @@ public class PollApplication {
         try {
             blockchain = minersBlockchain.get(freq).getBlockchain();
         } catch (RemoteException re) {
-            re.printStackTrace();
+            //re.printStackTrace();
             System.exit(1);
         }
 
@@ -220,18 +221,21 @@ public class PollApplication {
 
         }
 
+        
+
         // now print the report
         PrintWriter pw = null;
         try {
             System.out.println("Poll Report");
-            if (outputPath != null) {
+            if(outputPath != null){
                 pw = new PrintWriter(outputPath);
                 pw.println("Poll Report");
             }
 
-            for (Map.Entry<String, Integer> e : votes.entrySet()) {
+
+            for(Map.Entry<String, Integer> e : votes.entrySet()) {
                 System.out.println(e.getKey() + " - " + e.getValue());
-                if (outputPath != null) {
+                if(outputPath != null){
                     pw.println(e.getKey() + " - " + e.getValue());
                 }
             }
@@ -244,6 +248,12 @@ public class PollApplication {
         } catch(FileNotFoundException fnfe) {
             System.out.println("Cannot print the report since the file does not exist");
         }
+
+
+
+
+
+
 
     }
 
