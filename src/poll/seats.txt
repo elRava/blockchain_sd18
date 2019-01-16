@@ -2,3 +2,10 @@ Mozzecane1
 Padova7
 Legnago15
 Senigallia2
+CastelnuovoDelGarda3
+Padova3
+Venezia7
+GrandeInverno1
+GrandeInverno2
+Genova4
+

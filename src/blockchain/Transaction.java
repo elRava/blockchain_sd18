@@ -172,7 +172,7 @@ public class Transaction implements Serializable {
         } catch (SignatureException se) {
             se.printStackTrace();
         }
-        System.out.println("Verified:" + verified + " payload.verify:" + payload.verify());
+        //System.out.println("Verified:" + verified + " payload.verify:" + payload.verify());
         return verified && this.payload.verify();
     }
 
