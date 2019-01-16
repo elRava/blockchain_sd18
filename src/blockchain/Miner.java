@@ -26,7 +26,7 @@ import java.text.SimpleDateFormat;
 
 public class Miner extends UnicastRemoteObject implements MinerInterface {
 
-    public static final int DIFFICULTY = 7;
+    public static final int DIFFICULTY = 6;
     public static final int DEFAULT_PORT = 7392;
     public static final int DEFAULT_MINER_THREAD = 1;
     public static final int TRANSACTIONS_PER_BLOCK = 4;
@@ -56,6 +56,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     private Semaphore askBlocksSemaphore;
     private Semaphore blocksRetrievedSemaphore;
+    private Semaphore startGettingBlocks;
 
     private int blocksDoNotSend = 0;
 
@@ -76,6 +77,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         // on first run, ask blocks
         askBlocksSemaphore = new Semaphore(1);
         blocksRetrievedSemaphore = new Semaphore(0);
+        startGettingBlocks = new Semaphore(0);
 
         numberMinerThread = DEFAULT_MINER_THREAD;
     }
@@ -437,6 +439,9 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         minersIPList = chosedMiner;
                     }
                 }
+
+                startGettingBlocks.release();
+
                 /*
                  * if (firstConnection) { chooseBlockchain(); firstConnection = false; }
                  */
@@ -445,6 +450,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                 } catch (InterruptedException ie) {
                     ie.printStackTrace();
                 }
+                
 
             }
 
@@ -800,7 +806,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
             try {
                 // wait all other threads ready
-                Thread.sleep(1000);
+                startGettingBlocks.acquire();
             } catch(InterruptedException ie) {
 
             }
