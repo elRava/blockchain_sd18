@@ -16,16 +16,19 @@ import registry.RegistryInterface;
 import java.lang.reflect.MalformedParametersException;
 
 /**
- * Class that defines the Application of the miner Run with parameters -p port
- * -b backup file (both not mandatory) Default port 7392. IP localhost. Also
- * provides auto cleaning and auto backup by two different threads.
- * 
+ * Class that defines the Application of the miner Run with parameters
+ * -p port if not present default port 7392
+ * -b backup file
+ * -r registry where to connect. can connect to more registries. if port not defined, default 7867
+ * -t number of threads for mining
+ * IP localhost. Also provides auto cleaning and auto backup by two different threads.
+ *
  * @author Giuseppe Ravagnani
  * @version 1.0
  */
 public class MinerApplication {
     public static void main(String[] args) {
-        // -p port -b backup
+        // -p port -b backup -r registry -t number threads
 
         System.out.println("Miner application started");
 
@@ -97,9 +100,6 @@ public class MinerApplication {
 
         while (true) {
 
-            /*
-             * int portReg = 7867; String ip = "192.168.1.72";
-             */
             // It cleans the registry list on the miner
             // it's updated with only the working registry every iteration
             synchronized (min) {
@@ -126,28 +126,21 @@ public class MinerApplication {
                         min.addRegistry(reg);
                     }
                 }
-                // Miner is started only the first Time
+                // Start threads only first time
                 if (firstTime) {
                     min.startThreads();
                 }
                 firstTime = false;
             }
             try {
+                // update every 20 seconds
                 Thread.sleep(20000);
             } catch (InterruptedException ie) {
                 // ie.printStackTrace();
             }
 
         }
-        // min.chooseBlockchain();
 
-        /*
-         * RegistryApplication ra = new RegistryApplication(); CleanThread ct = ra.new
-         * CleanThread(reg); Thread cleanThread = new Thread(ct);
-         * cleanThread.setDaemon(true); cleanThread.start(); BackupThread bt = ra.new
-         * BackupThread(reg); Thread backupThread = new Thread(bt);
-         * backupThread.setDaemon(true); backupThread.start();
-         */
     }
 
 }

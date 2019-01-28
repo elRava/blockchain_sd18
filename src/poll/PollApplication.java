@@ -20,7 +20,8 @@ import blockchain.*;
 
 
 /**
- * 
+ *  
+ *
  * @author Giuseppe Ravagnani
  */
 public class PollApplication {
@@ -221,7 +222,7 @@ public class PollApplication {
 
         }
 
-        
+
 
         // now print the report
         PrintWriter pw = null;

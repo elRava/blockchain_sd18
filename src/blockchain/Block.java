@@ -135,7 +135,6 @@ public class Block implements Serializable {
     }
 
     /**
-     * TODO: check if it is better to make this method static
      * Calculate the merkle root. It is calculated from the list of the hashes of the transactions
      * take two by two and calculate the hash of the concatenation of the hashes
      * then repeat the same on the list of the hashes, and so on

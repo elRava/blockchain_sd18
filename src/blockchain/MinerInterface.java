@@ -15,7 +15,4 @@ public interface MinerInterface extends Remote {
 
     public LinkedList<Block> getMissingBlocks(byte[] hash) throws RemoteException;
     
-    //public LinkedList<Block> getBlocksGivenLength(int depth) throws RemoteException;
-
-    //public int depthOfTheBlock(byte[] hash) throws RemoteException;
 }
