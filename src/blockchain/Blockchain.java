@@ -1,13 +1,14 @@
 package blockchain;
 
-import java.util.List;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.*;
 import java.io.*;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
 
+/**
+ * Blockchain class, contains the real implementation of a blockchain
+ * @author Marco Sansoni
+ * @version 1.0
+ */
 public class Blockchain implements Serializable {
 
     private Ring last;
@@ -27,25 +28,6 @@ public class Blockchain implements Serializable {
         this.first = firstBlock;
     }
 
-    public LinkedList<Block> getFromDepth(int depth) {
-        LinkedList<Block> missingBlock = new LinkedList<>();
-        int currentLength = last.depth;
-        Ring currentRing = last;
-        while (currentLength >= depth) {
-            missingBlock.add(currentRing.block);
-            currentRing = currentRing.father;
-            currentLength = currentRing.depth;
-        }
-        return missingBlock;
-    }
-
-    public byte[] hashGivenDepth(int depth) {
-        Ring current = last;
-        while (current.depth != depth) {
-            current = current.father;
-        }
-        return current.block.getHash();
-    }
 
     /**
      * Method used to add a mined block on the blockchain It will be insert
@@ -63,14 +45,6 @@ public class Blockchain implements Serializable {
         Ring current = last;
         // Repeat until it finds block or it arrives at genesis block without finding it
         while (!isAdd && current != null) {
-
-            /*
-             * System.out.println("Analisi corrente:");
-             * System.out.println("Hash target da inserire: "+Block.hashToString(target));
-             * System.out.println("Corrente hash da valutare: "+Block.hashToString(current.
-             * block.getHash()));
-             */
-
             // Normally the block will be linked to the last block added to the blockchain
             if (!Arrays.equals(target, current.block.getHash())) { // If it's not..
                 // If i looking for same sibling of the genesis, previous is not in the
@@ -91,8 +65,7 @@ public class Blockchain implements Serializable {
             } else {
                 // The last block is the real last
                 // Generate the ring and set father and sons properly
-                Ring ring = new Ring(block);
-                
+                Ring ring = new Ring(block);              
                 //Check if the transactions in block are already in the blockchain
                 List<Transaction> toAdd = block.getListTransactions();
                 Ring temp = current;
@@ -105,8 +78,6 @@ public class Blockchain implements Serializable {
                     }
                     temp = temp.father;
                 }
-                               
-                
                 current.addSon(ring);
                 // the last block reference is related to bigger depth
                 if (ring.depth > last.depth) {
@@ -114,17 +85,67 @@ public class Blockchain implements Serializable {
                 }
                 // The block is properly added to the chain
                 isAdd = true;
-                // System.out.println("Blocco corrente con hash
-                // "+Block.hashToString(ring.block.getHash())+" appena inserito ha
-                // "+ring.sons.size()+" figli");
             }
-            // uodate the current node
+            // update the current node
             current = current.father;
         }
         return isAdd;
-
     }
 
+    
+    /**
+     * Private method used in add
+     * @param block to be added
+     * @param root the block which i start the research
+     * @return true if I add the block, false otherwise
+     */
+    private boolean DFS(Block block, Ring root) {
+        // target is the same of addNode
+        byte[] target = block.getPreviousHash();
+        boolean isAdd = false;
+        // I am looking for the hash in the subtree from root
+        if (!Arrays.equals(target, root.block.getHash())) {
+            // If the root is not the block who i am looking for
+            // method is ran recursively on the son
+            // System.out.println("Entro nel if");
+            List<Ring> sons = root.sons;
+            for (int i = 0; i < sons.size() && !isAdd; i++) {
+                isAdd = isAdd || DFS(block, sons.get(i));
+            }
+        } else {
+            // I find the proper block
+            // Like in addNode I create a ring and set its father
+            Ring ring = new Ring(block);
+            //Check if the transactions in block are already in the blockchain
+            List<Transaction> toAdd = block.getListTransactions();
+            Ring temp = root;
+            while(temp.father!=null){
+                Block currentBlock = temp.block;
+                for(Transaction t: toAdd){
+                    if(currentBlock.getListTransactions().contains(t)){
+                        return false;
+                    }
+                }
+                temp = temp.father;
+            }
+            root.addSon(ring);
+            // update the last Ring
+            if (ring.depth >= last.depth) {
+                this.last = ring;
+            }
+            return true;
+        }
+        // false if the root has no child or if the subtree does not contain the block
+        return false || isAdd;
+    }
+
+    /**
+     * Determine if a transaction belong to the blockchain
+     * A transaction is contained on the blockchain of it is belong on the main branch
+     * If a transaction belong to an orphan block will not be considered into the blockchain
+     * @param transaction to analyzed
+     * @return true if it is contained, false otherwise
+     */
     public boolean contains(Transaction transaction) {
         Iterator<Block> it = this.getIterator();
         while (it.hasNext()) {
@@ -136,6 +157,12 @@ public class Blockchain implements Serializable {
         return false;
     }
 
+    /**
+     * Deterime if a block belongs to the main branch of a blockchain
+     * If it exists on a orphan branch will be considered not on the blockchain
+     * @param block to be analyzed
+     * @return true if it contained, false otherwise
+     */
     public boolean contains(Block block) {
         LinkedList<Ring> queue = new LinkedList<>();
         queue.add(first);
@@ -151,6 +178,10 @@ public class Blockchain implements Serializable {
         return false;
     }
 
+    /**
+     * Compute the hash of the blockchain
+     * I concatenate different hash of the block in order to compute hash of a blockchain
+     */
     public void computeHash() {
         Iterator<Block> iter = this.getIterator();
         final int SHA256LENGTH = 32;
@@ -173,133 +204,60 @@ public class Blockchain implements Serializable {
         this.hash = finalhash;
     }
 
+    /**
+     * Hash of the blockchain
+     * @return hash of blockchain
+     */
     public byte[] getHash() {
         computeHash();
         return this.hash;
     }
 
+    /**
+     * Compute the hash of the blockchain
+     * @return the length
+     */
     public int length() {
         return last.depth + 1;
     }
 
-    /*
-     * public byte[] getFatherHash(byte[] hash) { Iterator<Block> it =
-     * this.getIterator(); while(it.hasNext()) { Block b = it.next(); // if hash is
-     * of the genesis it throws NullPointerException, which is right
-     * if(b.getHash().equals(hash)) { return b.getPreviousHash(); } } return null; }
+    /**
+     * Given an hash, it return all the blocks from there until the last block
+     * @param hash the hash value of the last block
+     * @return the list of the block
      */
-
     public LinkedList<Block> getMissingBlocks(byte[] hash) {
 
+        //DFS queue to explore the whole blockchain
         LinkedList<Ring> queue = new LinkedList<>();
+        //list that will be returned
         LinkedList<Block> returnList = new LinkedList<>();
-
         Ring iter = this.last;
         while (iter.father != null) {
-
+            //I add the block to the returnlist and to the queue
             returnList.addFirst(iter.block);
             queue.addLast(iter);
-
+            //check if we find the hash
             while (!queue.isEmpty()) {
                 Ring current = queue.removeFirst();
                 if (current.block.getHash().equals(hash)) {
+                    //I found the block
                     return returnList;
                 }
+                //I look in all the siblings of the block
                 for (Ring son : current.sons) {
                     if (!son.block.getHash().equals(returnList.getFirst().getHash())) {
                         queue.addLast(son);
                     }
                 }
             }
-
             iter = iter.father;
         }
-        // se non contiene blocco hash return tutta la blockchain
+        //If it do not contains the hash i return the whole blockchain
         return returnList;
-
     }
 
-    /*
-     * public int depthOfTheBlock(byte[] hash){ Ring current = last;
-     * while(current!=null && !Arrays.equals(current.block.getHash(), hash)){
-     * current = current.father; } if(current!=null){ return last.depth; } return
-     * -1; }
-     * 
-     * public boolean contains(Block b){ Iterator<Block> iter = this.getIterator();
-     * byte[] target = b.getHash(); while(iter.hasNext()){ byte[] current =
-     * iter.next().getHash(); boolean same = true; for(int i=0; i< target.length;
-     * i++){ if(current[i]!=target[i]){ same = false; break; } } if(same){
-     * 
-     * }
-     * 
-     * 
-     * public boolean contains(Transaction t){ Iterator<Block> iter =
-     * this.getIterator(); byte[] target = t.getTransactionHash();
-     * while(iter.hasNext()){ Block currentBlock = iter.next(); List<Transaction>
-     * allTran = currentBlock.getListTransactions(); Iterator<Transaction> iterTran
-     * = allTran.iterator(); while(iterTran.hasNext()){ byte[] currentTran =
-     * iterTran.next().getTransactionHash(); boolean same = true; for(int i=0; i<
-     * cur.length; i++){ if(current[i]!=target[i]){ same = false; break; } } }
-     * if(same){ return true; } } }
-     * 
-     * }
-     */
-
-    // private method used with addBlock
-    private boolean DFS(Block block, Ring root) {
-        // target is the same of addNode
-        byte[] target = block.getPreviousHash();
-        boolean isAdd = false;
-
-        /*
-         * System.out.println("Analisi corrente:");
-         * System.out.println("Hash target da inserire: "+Block.hashToString(target));
-         * System.out.println("Corrente hash da valutare: "+Block.hashToString(root.
-         * block.getHash()));
-         */
-
-        // I am looking for the hash in the subtree from root
-        if (!Arrays.equals(target, root.block.getHash())) {
-            // If the root is not the block who i am looking for
-            // method is ran recursively on the son
-            // System.out.println("Entro nel if");
-            List<Ring> sons = root.sons;
-            for (int i = 0; i < sons.size() && !isAdd; i++) {
-                isAdd = isAdd || DFS(block, sons.get(i));
-            }
-        } else {
-            // I find the proper block
-            // Like in addNode I create a ring and set its father
-            Ring ring = new Ring(block);
-
-            //Check if the transactions in block are already in the blockchain
-            List<Transaction> toAdd = block.getListTransactions();
-            Ring temp = root;
-            while(temp.father!=null){
-                Block currentBlock = temp.block;
-                for(Transaction t: toAdd){
-                    if(currentBlock.getListTransactions().contains(t)){
-                        return false;
-                    }
-                }
-                temp = temp.father;
-            }
-
-
-
-
-            root.addSon(ring);
-
-            // update the last Ring
-            if (ring.depth >= last.depth) {
-                this.last = ring;
-            }
-            return true;
-        }
-        // false if the root has no child or if the subtree does not contain the block
-        return false || isAdd;
-    }
-
+    
     /**
      * Get the reference to the last block on the chain. It will be used to link to
      * its the following block
@@ -320,6 +278,10 @@ public class Blockchain implements Serializable {
         return new BlockchainIterator();
     }
 
+    /**
+     * Method used to store the blockchain on a file, in a visualizable format
+     * @param path of the file to be saved
+     */
     public void print(String path) {
         PrintStream write = null;
         // FileOutputStream f = null;
@@ -338,12 +300,8 @@ public class Blockchain implements Serializable {
                 for (int i = 0; i < b.getListTransactions().size(); i++) {
                     s += "t" + i + ": " + Block.hashToString(b.getListTransactions().get(i).getHash()) + ", ";
                 }
-                // int lastIndex = b.getListTransactions().size()-1;
-                // s += "t" + lastIndex + ": " +
-                // Block.hashToString(b.getListTransactions().get(lastIndex).getHash());
                 write.println(s);
             }
-
             write.close();
         } catch (IOException e) {
             System.out.println("Error: " + e);
@@ -351,6 +309,10 @@ public class Blockchain implements Serializable {
         }
     }
 
+    /**
+     * Backup of the blockchain on a file
+     * @param path of the file to be saved
+     */
     public void backup(String path) {
         synchronized (this) {
             ObjectOutputStream oos = null;
@@ -371,6 +333,11 @@ public class Blockchain implements Serializable {
         }
     }
 
+    /**
+     * Restore the blockchain saved previously on a file
+     * @param backup the file used to restore the blockchain
+     * @return the blockchain
+     */
     public static Blockchain restore(File backup) {
         ObjectInputStream ois = null;
         try {
@@ -392,8 +359,12 @@ public class Blockchain implements Serializable {
 
     }
 
+    /**
+     * Class used to implement the iterator through the blockchain
+     * @author Marco Sansoni
+     * @version 1.0
+     */
     private class BlockchainIterator implements Iterator<Block> {
-
         // current position on the chain
         private Ring cursor = last;
 
@@ -421,6 +392,11 @@ public class Blockchain implements Serializable {
 
     }
 
+    /**
+     * Class ring, used as a wrapper of a block
+     * @author Marco Sansoni
+     * @version 1.0
+     */
     private class Ring implements Serializable {
 
         private Ring father;
@@ -447,25 +423,10 @@ public class Blockchain implements Serializable {
          * 
          * @param ring the ring to be added as a son
          */
-        private void addSon(Ring ring) {
-            /*
-             * System.out.println("Padre "+Block.hashToString(this.block.getHash())
-             * +" prima della chiamata del metodo ha "+sons.size()+" figli"); for(int
-             * i=0;i<sons.size();i++){
-             * System.out.println("Figlio "+i+" ha hash "+Block.hashToString(sons.get(i).
-             * block.getHash())); }
-             */
+        private void addSon(Ring ring) {          
             sons.add(ring);
             ring.father = this;
-            ring.depth = depth + 1;
-            // System.out.println("Padre dopo la chiamata del metodo ha "+sons.size()+"
-            // figli");
-            /*
-             * System.out.println("Padre "+Block.hashToString(this.block.getHash())+" ha "
-             * +sons.size()+" figli"); for(int i=0;i<sons.size();i++){
-             * System.out.println("Figlio "+i+" ha hash "+Block.hashToString(sons.get(i).
-             * block.getHash())); }
-             */
+            ring.depth = depth + 1;            
         }
 
         /**
@@ -475,10 +436,7 @@ public class Blockchain implements Serializable {
          */
         private List<Ring> getSiblings() {
             List<Ring> siblings = new LinkedList<Ring>();
-            byte[] currentHash = this.block.getHash();
-            // System.out.println("Il padre con hash
-            // "+Block.hashToString(this.father.block.getHash())+" ha
-            // "+this.father.sons.size()+" figli");
+            byte[] currentHash = this.block.getHash();          
             for (Ring r : this.father.sons) {
                 // Return only the ring with block's hash different from this block's hash
                 if (r.block.getHash() != currentHash) {

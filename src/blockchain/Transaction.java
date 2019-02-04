@@ -1,22 +1,19 @@
 package blockchain;
 
 import java.sql.Timestamp;
-import java.net.InetAddress;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.io.UnsupportedEncodingException;
+import java.security.*;
+import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.io.*;
-import java.security.MessageDigest;
 import java.nio.charset.*;
 
-public class Transaction implements Serializable {
+/**
+ * Class of a transaction of a blockchain
+ * Transaction contains the vote and information related the source and time
+ * @author Marco Sansoni
+ * @version 1.0
+ */
+public class Transaction implements Serializable{
 
     private Verifiable payload;
     private Timestamp creationTime;
@@ -38,7 +35,7 @@ public class Transaction implements Serializable {
         // this.keyDst = keyDst;
         this.signature = null;
         this.transactionHash = null;
-        setCurrentTime();
+        this.creationTime = new Timestamp(System.currentTimeMillis());
     }
 
     /**
@@ -82,31 +79,16 @@ public class Transaction implements Serializable {
     }
 
     /**
-     * TODO: Use the timestamp provided by NTP server Set the timestamp of
-     * transaction
+     * Signature of the transaction
+     * @return the singature
      */
-    private void setCurrentTime() {
-        /*
-         * String TIME_SERVER = "time-a.nist.gov"; //server a cui chiedere orario
-         * NTPUDPClient timeClient = new NTPUDPClient(); //client che fa richiesta per
-         * il Network time protocol InetAddress inetAddress =
-         * InetAddress.getByName(TIME_SERVER); //collegamento al server TimeInfo
-         * timeInfo = timeClient.getTime(inetAddress); //ora che ritorna dal server è
-         * nell'oggetto TimeInfo //long returnTime =
-         * timeInfo.getMessage().getTransmitTimeStamp().getTime(); long returnTime =
-         * timeInfo.getMessage().getReceiveTimeStamp().getTime(); this.creationTime =
-         * returnTime;
-         */
-        this.creationTime = new Timestamp(System.currentTimeMillis());
-    }
-
     public byte[] getSignature() {
         return signature;
     }
 
-    /**
-     * Set the hash of the transaction Hash will be timestamp + payload + keySrc +
-     * keyDst
+    /**    
+     * Set the hash of the transaction. 
+     * Hash will be timestamp + payload + keySrc 
      */
     private void setHash() {
         // String keyDestString =

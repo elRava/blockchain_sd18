@@ -4,20 +4,32 @@ import java.util.*;
 import blockchain.*;
 import registry.*;
 import java.net.*;
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.*;
 import java.lang.reflect.MalformedParametersException;
 import java.rmi.*;
 import java.security.*;
-import java.io.*;
 
+/**
+ * Application used to the specific vote
+ * @author Marco Sansoni
+ * @version 1.0
+ */
 public class VoteApplication {
 
+    /**
+     * Main application
+     * The setting to the network will be defined as input
+     * @param args -r registry in the format ip:port, -s the name of the seat,
+     *             -k the path of the txt containing the key to validate the vote
+     */
     public static void main(String[] args) {
 
+        //default port if it is not setted on args
         final int DEFAULT_PORT_REG = 7867;
 
+        //List of the registry used to spread my vote
         List<RegistryInterface> registryList = new LinkedList<>();
+        //Registry writed in Ip:Port format
         ArrayList<InetSocketAddress> listReg = new ArrayList<>();
 
         String seat = null;
@@ -29,10 +41,12 @@ public class VoteApplication {
             throw new MalformedParametersException();
         }
 
+        //I set all the parameters obtained in input
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("-r")) {
                 String reg = args[++i];
                 String[] val = reg.split(":");
+                //If i do not set the port i used as port registry the default one
                 if (val.length > 0) {
                     listReg.add(new InetSocketAddress(val[0], Integer.valueOf(val[1])));
                 } else {
@@ -45,6 +59,7 @@ public class VoteApplication {
             }
         }
 
+        //Check if the input is complete
         if (seat == null) {
             System.err.println("Seat is missing");
             System.exit(1);
@@ -56,9 +71,12 @@ public class VoteApplication {
             System.exit(1);
         }
 
+        //I obtain the value of public and private key
         pub = GenerateKey.getPublicFromFile(keyPath);
         pri = GenerateKey.getPrivateFromFile(keyPath);
 
+        //I try to connect to all the registry on input
+        
         for (int i = 0; i < listReg.size(); i++) {
             RegistryInterface reg = null;
             try {
@@ -77,27 +95,22 @@ public class VoteApplication {
                         "Registry " + listReg.get(i).getHostName() + ":" + listReg.get(i).getPort() + " not reachable");
                 reg = null;
             }
+            //If i get an exception i do not add to the list
             if (reg != null) {
                 registryList.add(reg);
             }
         }
 
-        // Connection to the miner
+        //List of the inetsocketaddress of the miner
         List<InetSocketAddress> updatedMinerList = new LinkedList<InetSocketAddress>();
 
-        // InetSocketAddress of the miner
-
-        // InetSocketAddress myAddress = null;
-        // myAddress = new InetSocketAddress(getMyAddress(), myPort);
-
-        // synchronized (registryList) {
+        //Iterator on all registry
         Iterator<RegistryInterface> regIter = registryList.iterator();
         while (regIter.hasNext()) {
             RegistryInterface actual = regIter.next();
             List<InetSocketAddress> addressFromThis = null; // inetsocketaddress from the actual registry
-            try {
-                // actual.register(myAddress);
-                // System.out.println("Correttamente registrato");
+            //From each registry i store all the miner in its list
+            try {               
                 addressFromThis = actual.getIPSet();
             } catch (RemoteException re) {
                 re.printStackTrace();
@@ -107,10 +120,8 @@ public class VoteApplication {
                 updatedMinerList.addAll(addressFromThis);
             }
         }
-        // }
-
-        // System.out.println("Tutti i miner che ricevo dal registry sono: " +
-        // updatedMinerList.size());
+       
+        //I set the number of the connection
         int numberConnection = 3;
         // now i want to connect to a fixed number to miner
         // if i don't know so many address i will connect to all
@@ -120,32 +131,16 @@ public class VoteApplication {
         // random generator
         Random ra = new Random();
 
-        // the final list of all the working connection
+        //the final list of all the working connection
         List<MinerInterface> chosedMiner = new LinkedList<MinerInterface>();
-
         List<InetSocketAddress> addressChosedMiner = new LinkedList<InetSocketAddress>();
 
         // I continue until i reach the target number of connection
-        // System.out.println("Attualmente connesso a " + chosedMiner.size() + "
-        // Miner");
         while (chosedMiner.size() < numberMiner && updatedMinerList.size() > 0) {
-
-            // System.out.println("Attualmente connesso a " + chosedMiner.size() + "
-            // Miner");
-            // System.out.println("Possibili miner ancora da testare " +
-            // updatedMinerList.size());
             int find = ra.nextInt(updatedMinerList.size());
             InetSocketAddress chose = updatedMinerList.get(find);
             updatedMinerList.remove(find);
-
-            /*
-             * if (chose.getAddress().getHostAddress().equals(Miner.getMyAddress().
-             * getHostAddress()) && chose.getPort() == myPort) { //
-             * System.out.println("Ho rimosso il mio"); continue; }
-             */
-
             boolean valid = true;
-
             // avoid to keep the same twice
             Iterator<InetSocketAddress> iterAdd = addressChosedMiner.iterator();
             while (iterAdd.hasNext()) {
@@ -156,43 +151,34 @@ public class VoteApplication {
                     break;
                 }
             }
-            if (valid) {
-                // System.out.println("valid? " + valid);
+
+            //I connect to the miner in the list
+            if (valid) {              
                 // I create the reference to the remote object, if it is possible
                 MinerInterface m = null;
                 String ip = chose.getAddress().getHostAddress();
                 int portMiner = chose.getPort();
-                // System.out.println("Mi provo a collegare a IP " + ip + " e porta " +
-                // portMiner);
+               
                 try {
                     m = (MinerInterface) Naming.lookup("//" + ip + ":" + portMiner + "/miner");
-                    // System.out.println("Successfully connected to IP " + ip + ":" + portMiner);
                 } catch (RemoteException re) {
-                    // re.printStackTrace();
                     m = null;
-                } catch (NotBoundException nbe) {
-                    // nbe.printStackTrace();
+                } catch (NotBoundException nbe) {                    
                     m = null;
                 } catch (MalformedURLException mue) {
-                    // mue.printStackTrace();
                     m = null;
                 }
+
                 // if i am able to connect, i add to the list
                 // only condition to add the miner to the list
                 if (m != null) {
                     chosedMiner.add(m);
                     addressChosedMiner.add(chose);
-                }
-                // System.out.println("Total connected miner: " + chosedMiner.size());
+                }               
             }
-            // I compute at avery itaration the possible number of miner
-
-            // numberMiner = Math.min(updatedMinerList.size() , numberConnection -
-            // chosedMiner.size());
-            // System.out.println("Number Miner da raggiungere "+numberMiner);
-
+           
         }
-        // Print list of all Candidates
+        //List of all candidates
         String path = "poll/parties.txt";
         BufferedReader reader = null;
         String line = null;
@@ -206,6 +192,8 @@ public class VoteApplication {
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
+        //I print on screen the possible parties with number related to it
+        //Number will be used in order to define our reference
         for (int i = 0; i < allParties.size(); i++) {
             System.out.println((i + 1) + " - " + allParties.get(i));
         }
@@ -224,6 +212,7 @@ public class VoteApplication {
                 valid = false;
             }
         }
+        //r will contain our preference, party related will be on position r-1
         String party = allParties.get(r-1);
         
         //Create the transaction and send to all miner
@@ -231,12 +220,9 @@ public class VoteApplication {
         v.sign(pri);
         Transaction t = new Transaction(v, pub);
         t.sign(pri);
-
-
         for (MinerInterface m : chosedMiner) {
             try {
                 m.sendTransaction(t);
-                // m.sendBlock(b);
             } catch (RemoteException re) {
                 re.printStackTrace();
             }
