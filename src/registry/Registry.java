@@ -95,23 +95,7 @@ public class Registry extends UnicastRemoteObject implements RegistryInterface {
                 iter.remove();
             } 
         }
-    
-
-        // may take some time but it's ok
-        /*
-         * for(Map.Entry<InetSocketAddress, Timestamp> e : reg.entrySet()) {
-         * if(System.currentTimeMillis() > e.getValue().getTime() + millis) {
-         * reg.remove(e); } }
-         */
-
-        /*
-         * Iterator<Entry<InetSocketAddress,Timestamp>> iter =
-         * reg.entrySet().iterator(); while (iter.hasNext()) {
-         * Map.Entry<InetSocketAddress,Timestamp> current = (Map.Entry) iter.next(); if
-         * (System.currentTimeMillis() > current.getValue().getTime() + millis) {
-         * iter.remove(); } }
-         */
-        // }
+   
     }
 
     /**

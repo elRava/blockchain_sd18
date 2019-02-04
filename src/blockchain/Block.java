@@ -150,11 +150,7 @@ public class Block implements Serializable {
         final int SHA256LENGTH = 32;
         byte[][] pendingHash = new byte[listTransactions.size()][SHA256LENGTH];
         for(int i = 0; i < pendingHash.length; i++) {
-            //Transaction temp = (Transaction)listTransactions.get(i);
             pendingHash[i] = listTransactions.get(i).getTransactionHash();
-            //String s = temp.getTransactionHash();
-            //System.out.println("PD "+s);
-            //pendingHash[i] = temp.tranByte();
         }
         while(pendingHash.length > 1) {
             byte[][] calculated = new byte[(pendingHash.length + 1) / 2][SHA256LENGTH];
@@ -264,8 +260,7 @@ public class Block implements Serializable {
      * @param numThread the number of threads that will work
      */
     public void mineBlock(int difficulty, int numThread) {
-        // se abbiamo tempo evoglia dire quanti thread dedicare
-        // crea thread che mina. se numero di transazioni aumenta ricomincia
+        // start mining. if number transactions increases stop and start again
         isMining = true;
         merkleRoot = calculateMerkleRoot(listTransactions);
 
@@ -365,12 +360,9 @@ public class Block implements Serializable {
          */
         public void run() {
 
-            //System.out.println("Creato " + Thread.currentThread().getName());
-
             while(true) {
 
                 if(isMined.get()) {
-                    //System.out.println("aaa");
                     return;
                 }
 
@@ -378,7 +370,6 @@ public class Block implements Serializable {
 
                 // calculate hash
                 byte[] tempHash = calculateHash(previousHash, merkleRoot, nonceCopy);
-                //System.out.println(Thread.currentThread().getName() + "   nonce " + nonceCopy + "   " + hashToString(tempHash));
 
                 // verify correctness
                 if(! verifyHash(tempHash, difficulty)) {

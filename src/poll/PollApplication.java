@@ -1,18 +1,10 @@
 package poll;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.reflect.MalformedParametersException;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
+import java.rmi.*;
 import java.util.*;
 
 import registry.*;
@@ -20,12 +12,18 @@ import blockchain.*;
 
 
 /**
- *  
+ *  Class to make the poll.
+ * Take the votes from the blockchain and count
  *
  * @author Giuseppe Ravagnani
  */
 public class PollApplication {
 
+    /**
+     * The main
+     * 
+     * @param args the list of parameters -r the registry IP address -s the file of the seats -k the file of the keys -p the file of the parties -o the file where to write the output
+     */
     public static void main(String[] args) {
 
         final int DEFAULT_PORT_REG = 7867;
@@ -87,9 +85,7 @@ public class PollApplication {
         Map<byte[], MinerInterface> minersBlockchain = new HashMap<>();
 
         for (InetSocketAddress addr : listReg) {
-
             RegistryInterface reg = null;
-
             try {
                 reg = (RegistryInterface) Naming.lookup("//" + addr.getAddress().getHostAddress() + ":" + addr.getPort() + "/registry");
                 ArrayList<InetSocketAddress> listMiners = reg.getIPSet();
@@ -222,8 +218,6 @@ public class PollApplication {
 
         }
 
-
-
         // now print the report
         PrintWriter pw = null;
         try {
@@ -232,7 +226,6 @@ public class PollApplication {
                 pw = new PrintWriter(outputPath);
                 pw.println("Poll Report");
             }
-
 
             for(Map.Entry<String, Integer> e : votes.entrySet()) {
                 System.out.println(e.getKey() + " - " + e.getValue());
@@ -249,12 +242,6 @@ public class PollApplication {
         } catch(FileNotFoundException fnfe) {
             System.out.println("Cannot print the report since the file does not exist");
         }
-
-
-
-
-
-
 
     }
 

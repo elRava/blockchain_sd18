@@ -2,12 +2,7 @@ package blockchain;
 
 import java.rmi.*;
 import java.rmi.registry.*;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.io.*;
 import java.util.*;
 
@@ -27,8 +22,12 @@ import java.lang.reflect.MalformedParametersException;
  * @version 1.0
  */
 public class MinerApplication {
+
+    /**
+     * 
+     * @param args the list of arguments -p port -b backup -r registry -t number threads
+     */
     public static void main(String[] args) {
-        // -p port -b backup -r registry -t number threads
 
         System.out.println("Miner application started");
 
@@ -87,12 +86,6 @@ public class MinerApplication {
             System.out
                     .println("Miner bound at //" + Miner.getMyAddress().getHostAddress() + ":" + portMiner + "/miner");
 
-            /*
-             * if(fromBackup) { System.out.println("Restoring registry from backup");
-             * reg.restore(new File(path));
-             * System.out.println("Registry restored from backup"); }
-             */
-
         } catch (RemoteException re) {
             re.printStackTrace();
             System.exit(1);
@@ -111,14 +104,11 @@ public class MinerApplication {
                         reg = (RegistryInterface) Naming.lookup("//" + IPReg + "/registry");
                     } catch (RemoteException re) {
                         System.err.println("Registry " + IPReg + " not reachable");
-                        // re.printStackTrace();
                         reg = null;
                     } catch (NotBoundException nbe) {
-                        // nbe.printStackTrace();
                         System.err.println("Registry " + IPReg + " not reachable");
                         reg = null;
                     } catch (MalformedURLException mue) {
-                        // mue.printStackTrace();
                         System.err.println("Registry " + IPReg + " not reachable");
                         reg = null;
                     }
@@ -136,7 +126,6 @@ public class MinerApplication {
                 // update every 20 seconds
                 Thread.sleep(20000);
             } catch (InterruptedException ie) {
-                // ie.printStackTrace();
             }
 
         }
