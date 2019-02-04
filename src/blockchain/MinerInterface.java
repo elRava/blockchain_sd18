@@ -3,6 +3,11 @@ package blockchain;
 import java.rmi.*;
 import java.util.LinkedList;
 
+/**
+ * Interface of a remote object that defines a miner
+ * @author Giuseppe Ravagnani
+ * @version 1.0
+ */
 public interface MinerInterface extends Remote {
 
     public Blockchain getBlockchain() throws RemoteException;

@@ -1,29 +1,21 @@
 package blockchain;
 
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.rmi.*;
-import java.rmi.registry.Registry;
 import java.util.*;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.omg.CORBA.portable.RemarshalException;
-
-import java.io.BufferedReader;
 import java.io.*;
-import java.io.ObjectInputStream;
-import java.net.*;
 import registry.*;
 import java.rmi.server.*;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
+/**
+ * Class that defines a remote object Miner. It uses multiple threads.
+ * 
+ * @author Giuseppe Ravagnani
+ * @author Marco Sansoni
+ * @version 1.0
+ */
 public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     public static final int DIFFICULTY = 6;
@@ -40,7 +32,6 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     private List<Transaction> pendingTransactions;
 
     private List<Block> blockToSend;
-    // private List<Block> pendingBlock;
 
     private Thread updateRegistry;
     private Thread transactionsThread;
@@ -52,29 +43,27 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
 
     private int numberMinerThread;
 
-    // private boolean firstConnection = true;
-
     private Semaphore askBlocksSemaphore;
     private Semaphore blocksRetrievedSemaphore;
     private Semaphore startGettingBlocks;
 
     private int blocksDoNotSend = 0;
 
-    // private int lengthToSend = 0;
-
+    /**
+     * Constructor of class Miner
+     * @throws RemoteException
+     */
     public Miner() throws RemoteException {
         super();
         transactionToSend = new LinkedList<Transaction>();
         pendingTransactions = new LinkedList<Transaction>();
         blockToSend = new LinkedList<>();
-        // pendingBlock = new LinkedList<>();
         registryList = new LinkedList<>();
         minersIPList = new LinkedList<>();
         blockchain = new Blockchain();
-        // chooseBlockchain();
         myPort = DEFAULT_PORT;
 
-        // on first run, ask blocks
+        // on first run, ask blocks (don't wait on the semaphore)
         askBlocksSemaphore = new Semaphore(1);
         blocksRetrievedSemaphore = new Semaphore(0);
         startGettingBlocks = new Semaphore(0);
@@ -82,13 +71,6 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         numberMinerThread = DEFAULT_MINER_THREAD;
     }
 
-    /*
-     * public LinkedList<Block> getBlocksGivenLength(int depth) throws
-     * RemoteException { return blockchain.getFromDepth(depth); }
-     * 
-     * public int depthOfTheBlock(byte[] hash) throws RemoteException { return
-     * blockchain.depthOfTheBlock(hash); }
-     */
 
     public Blockchain getBlockchain() throws RemoteException {
         return blockchain;
@@ -143,6 +125,13 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     }
 
     public void clearRegistry() {
+    /*
+     * public LinkedList<Block> getBlocksGivenLength(int depth) throws
+     * RemoteException { return blockchain.getFromDepth(depth); }
+     * 
+     * public int depthOfTheBlock(byte[] hash) throws RemoteException { return
+     * blockchain.depthOfTheBlock(hash); }
+     */
         synchronized (registryList) {
             registryList.clear();
         }
@@ -459,34 +448,22 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     }
 
     /**
-     * thread che pensa alle transazioni
+     * Thread that manages Transactions
+     * @author Giuseppe Ravagnani
+     * @version 1.0
      */
     private class TransactionsThread implements Runnable {
 
         @SuppressWarnings("deprecation")
         public void run() {
-            // while(lista non è vuota)
-            // sincronized
-            // wait
-            // ottengo l'elemento dalla lista delle trnsazioni da inviare
-            // lo cancello dalla lista
-            // esco dal sincronized
-            // con la transazione la verifico
-            // valida se non compare mai nella blockchain, e se il verify delle chiavi
-            // private e pubbliche ritorna true
-            // non deve già essere presente nella pending list
-            // se va tutto bene lo mando a tutti
-            // alla fine lo metto nella mia lista
-
-            // faccio il notify all per svegliare il miner che dormiva se non c'erano
-            // transazioni
-            // se avevo già 4 transazioni pendenti nella pendingTransactions, non rompo il
-            // azzo al miner
-            // se ne avevo di meno devo ristartarlo
-            // ricomincio da capo
+            // I have a list of transactions to send to other miners
+            // every time I receive a transaction from a client or another miner I put the transaction
+            // into the queue (only if valid and not yet in blockchain). While the transaction is not empty I take some transations and I put them in a block
+            // then start the mining thread that mnes the block. (these done in other threads)
 
             while (true) {
 
+                // use a temp list in order to don't keep the lock too much time
                 List<Transaction> tempList = new LinkedList<>();
                 synchronized (transactionToSend) {
                     while (transactionToSend.isEmpty()) {
@@ -502,7 +479,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         tempList.add(transactionToSend.remove(0));
                     }
                 }
-
+                // use a temp list in order to keep the lock only a few time
                 LinkedList<MinerInterface> listMiners = null;
                 synchronized (minersIPList) {
                     // just clone
@@ -512,14 +489,14 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     }
                 }
 
+                // do operations on temp list of transactions
+                // send transactions to other miners
                 while (!tempList.isEmpty()) {
 
                     Transaction t = tempList.remove(0);
 
                     System.out.println("Transaction received: " + Block.hashToString(t.getHash()));
 
-                    // possibile errore è blockchain contains quando sta ancora facendo
-                    // choseBlockchain
                     if (t.verify() && !pendingTransactions.contains(t) && !blockchain.contains(t)) {
                         // send to every miner
                         for (MinerInterface mi : listMiners) {
@@ -530,15 +507,15 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                             }
                         }
 
+                        // put the transaction in the list of transactions where the block thread takes the transactions
+                        // to put on the block
                         synchronized (pendingTransactions) {
                             if (!pendingTransactions.contains(t)) {
                                 pendingTransactions.add(t);
                             }
-                            // pendingTransactions.notifyAll();
                         }
 
-                        // restart miner thread
-                        // @SuppressWarnings("deprecation")
+                        // restart miner thread if other transactions can be put on the block
                         if (pendingTransactions.size() < TRANSACTIONS_PER_BLOCK) {
                             minerThread.stop();
                             // minerThread.start();
@@ -557,7 +534,9 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     }
 
     /**
-     * thread che pensa ai blocchi
+     * Thread that manages Blocks
+     * @author Giuseppe Ravagnani
+     * @version 1.0
      */
     private class BlocksThread implements Runnable {
 
@@ -582,22 +561,24 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
             // veglio il miner
             // mi addormento
 
+            // for each receved block (from other miners) send it. flooding
+            // if a new block arrives, stop mining brutally
+
             while (true) {
 
+                // temp list in order to take the lock only a few time
                 List<Block> tempList = new LinkedList<>();
                 synchronized (blockToSend) {
                     while (blockToSend.isEmpty()) {
                         try {
-                            // System.out.println("wait");
                             blockToSend.wait();
                         } catch (InterruptedException ie) {
                             ie.printStackTrace();
                             System.exit(1);
                         }
                     }
-                    // System.out.println("wake up");
-                    // block arrived, stop mining!
 
+                    // block arrived, stop mining!
                     minerThread.stop();
 
                     // copy list
@@ -608,6 +589,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     }
                 }
 
+                // copy list of miners in order to take the loc only few time
                 LinkedList<MinerInterface> listMiners = null;
                 synchronized (minersIPList) {
                     // just clone
@@ -616,19 +598,17 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                         listMiners.add(mi);
                     }
                 }
+
                 System.out.println("Pending transactions: " + tempList.size());
 
+                // do operations on the temp list
+                // for each received block: verify, send to other miners and add to the blockchain
                 while (!tempList.isEmpty()) {
                     Block b = tempList.remove(0);
-
-                    // System.out.println("Block hash: " + Block.hashToString(b.getHash()));
-                    // System.out.println("Previous Block hash: " +
-                    // Block.hashToString(b.getPreviousHash()));
                     boolean valid = false;
                     // blockchain
                     synchronized (blockchain) {
-                        // System.out.println("Entro");
-                        // System.out.println("Contenuta? " + blockchain.contains(b));
+                        // verify block and check if blockchain already contains it or some of its transactions
                         if (b.verifyBlock(DIFFICULTY) && !blockchain.contains(b)) {
                             valid = true;
                             for (Transaction t : b.getListTransactions()) {
@@ -636,14 +616,14 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                                     continue;
                                 }
                             }
-
+                            // if cannot add the block to the blockchain for some reasons
+                            // wake up the thread that asks blocks
                             if (blockchain.addBlock(b) == false) {
                                 askBlocksSemaphore.release();
                                 try {
                                     blocksRetrievedSemaphore.acquire();
                                 } catch (InterruptedException ie) {
                                     ie.printStackTrace();
-                                    // System.exit(1);
                                 }
                             }
 
@@ -658,12 +638,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                                 }
                             }
 
-                            // System.out.println("Blockchain hash: " +
-                            // Block.hashToString(blockchain.getHash()));
                             System.out.println("Blockchain length: " + blockchain.length() + " with last block hash: "
                                     + Block.hashToString(blockchain.lastBlock().getHash()));
-                            // System.out.println(
-                            // "Blockchain last block: " + );
 
                             blockchain.print("blockchain/print/M" + myPort + ".txt");
                             String fileName = new SimpleDateFormat("yyyyMMddHHmmss")
@@ -672,10 +648,8 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                                     "blockchain/backup/blockchain/M" + myPort + "_blockchain" + fileName + ".txt");
                         }
                     }
-                    // System.out.println("esco");
-                    // blockDoNotSend sono blocchi inseriti in blockToSend che arrivano da altri
-                    // miner quando chiedo blocchi
-                    // non devi riinviarli
+                    
+                    // blockdonotsend is the number of blocks asket to other miners, so they must not be sent again
                     if (valid && blocksDoNotSend == 0) {
                         // send to every miner
                         for (MinerInterface mi : listMiners) {
@@ -692,9 +666,7 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     }
                 }
 
-                // TODO: does not work well, look after minerThread debug
                 try {
-                    // minerThread.start();
                     minerThread = new Thread(new MinerThread(DIFFICULTY, numberMinerThread));
                     minerThread.start();
                 } catch (IllegalThreadStateException itse) {
@@ -798,58 +770,42 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
     }
 
     /**
-     * 
+     * Thread that asks blocks to other miners. waits until other threads start.
+     * @author Giuseppe Ravagnani
+     * @version 1.0
      */
     private class AskBlocksThread implements Runnable {
 
         public void run() {
 
             try {
-                // wait all other threads ready
+                // wait all other threads ready. only on start up
                 startGettingBlocks.acquire();
             } catch(InterruptedException ie) {
 
             }
 
+            // at each iteration stop until there is need to ask new blocks.
+            // generally if the miner receives a block that cannot attached then ask blocks
             while (true) {
 
                 try {
+                    // wait until there is need to ask blocks
                     askBlocksSemaphore.acquire();
                 } catch (InterruptedException ie) {
                     ie.printStackTrace();
                     System.exit(1);
                 }
-                /*
-                 * // Mappa profondità frequenza Map<Integer, Integer> poll = new HashMap<>();
-                 * 
-                 * 
-                 * //complessità folle, da sistemare in futuro //non ci sincronizziamo su
-                 * minerList, non è un problema perdere un miner perchè non più attivo int
-                 * maxDepth = -1; int currentDepth = blockchain.length()-1; while (maxDepth ==
-                 * -1) { for (MinerInterface miner : minersIPList) { try { int depth =
-                 * miner.depthOfTheBlock(blockchain.hashGivenDepth(currentDepth)); if
-                 * (poll.containsKey(depth)) { poll.replace(depth, poll.get(depth) + 1); } else
-                 * { poll.put(depth, 1); } } catch (RemoteException re) { re.printStackTrace();
-                 * System.exit(1); } } maxDepth = -1; int maxFreq = 0; for (Integer i :
-                 * poll.keySet()) { if (poll.get(i) > maxFreq) { maxDepth = i; } }
-                 * currentDepth--; }
-                 */
 
-                // chiedi tutti blocchi a partire dall'ultimo che ho e inseriscili in testa a
-                // blocktosend
-                // ocio deadlock!!!!!!
-                // synchronized(minersIPList) {
+                // get blocks and add them to blockToSend on top of the queue. Do not send again the blocks received
                 synchronized (blockToSend) {
 
                     for (MinerInterface miner : minersIPList) {
                         LinkedList<Block> blockList = new LinkedList<>();
                         try {
-                            // System.out.println("Chiedo lista blocchi a miner");
                             blockList = miner.getMissingBlocks(blockchain.lastBlock().getHash());
-
                         } catch (RemoteException re) {
                             re.printStackTrace();
-                            //System.exit(1);
                         }
 
                         while (!blockList.isEmpty()) {
@@ -859,8 +815,10 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
                     }
 
                 }
-                // }
 
+                synchronized(blockToSend) {
+                    blockToSend.notify();
+                }
                 blocksRetrievedSemaphore.release();
 
             }
@@ -868,16 +826,5 @@ public class Miner extends UnicastRemoteObject implements MinerInterface {
         }
 
     }
-
-    /*
-     * private class Triplet<T, U, V> {
-     * 
-     * public T first; public U second; public V third;
-     * 
-     * public Triplet(T first, U second, V third) { this.first = first; this.second
-     * = second; this.third = third; }
-     * 
-     * }
-     */
 
 }

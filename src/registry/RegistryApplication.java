@@ -2,15 +2,10 @@ package registry;
 
 import java.rmi.*;
 import java.rmi.registry.*;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.UnknownHostException;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.util.Date;
 import java.lang.reflect.MalformedParametersException;
 
 /**
@@ -55,9 +50,11 @@ public class RegistryApplication {
 
             InetAddress myAddress = getMyAddress();
 
+            // set hostname
             System.setProperty("java.rmi.server.hostname", myAddress.getHostAddress());
-            // System.out.println("......." + InetAddress.getLocalHost().getHostAddress());
             System.out.println("Registry bound at //" + myAddress.getHostAddress() + ":" + port + "/registry");
+
+            // restore from backup
             if (fromBackup) {
                 System.out.println("Restoring registry from backup");
                 reg.restore(new File(path));
@@ -68,6 +65,7 @@ public class RegistryApplication {
             System.exit(1);
         }
 
+        // start threads
         RegistryApplication ra = new RegistryApplication();
         CleanThread ct = ra.new CleanThread(reg);
         Thread cleanThread = new Thread(ct);
@@ -80,6 +78,12 @@ public class RegistryApplication {
 
     }
 
+    /**
+     * Get my address In each pc there are different IP addresses (localhost, net
+     * address). Return the IP visible on LAN
+     * 
+     * @return the IP address
+     */
     public static InetAddress getMyAddress() {
         Enumeration e = null;
         try {
@@ -95,7 +99,6 @@ public class RegistryApplication {
                 if (!i.isLoopbackAddress() && i instanceof Inet4Address) {
                     return i;
                 }
-                // System.out.println(i.getHostAddress());
             }
         }
         return null;
