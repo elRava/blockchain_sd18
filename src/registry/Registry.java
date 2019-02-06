@@ -6,13 +6,17 @@ import java.rmi.server.*;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.Map.*;
 import java.io.*;
+import java.util.concurrent.*;
 
 /**
- * Class that defines a distributed registry used by miners to create the p2p overlay network.
- * In this class each peer has to find the socket address of each other peer
- * but to get this, peers need to register themself at this registry
- * This registry provides also backup and restore non distrubuted functions
+ * Class that defines a distributed registry used by miners to create the p2p
+ * overlay network. In this class each peer has to find the socket address of
+ * each other peer but to get this, peers need to register themself at this
+ * registry This registry provides also backup and restore non distrubuted
+ * functions
+ * 
  * @author Giuseppe Ravagnani
  * @version 1.0
  */
@@ -22,32 +26,38 @@ public class Registry extends UnicastRemoteObject implements RegistryInterface {
 
     /**
      * Constructor of the class
+     * 
      * @throws RemoteException
      */
     public Registry() throws RemoteException {
         super();
-        reg = new HashMap<>();
+        reg = new ConcurrentHashMap<>();
     }
 
     /**
-     * Method that register a new InetSocketAddress in the registry.
-     * It also saves the timestamp at which the registration has been made
-     * so it is possible to remove old registrations.
-     * If an address is still present, it will be overwritten and the timestamp will be updated
+     * Method that register a new InetSocketAddress in the registry. It also saves
+     * the timestamp at which the registration has been made so it is possible to
+     * remove old registrations. If an address is still present, it will be
+     * overwritten and the timestamp will be updated
+     * 
      * @param address the address that needs to be registred
      * @throws RemoteException
      */
     public void register(InetSocketAddress address) throws RemoteException {
-        // synchronize on reg sonce it is a distributed registry and multiple hosts have access
-        synchronized(reg) {
+        // synchronize on reg sonce it is a distributed registry and multiple hosts have
+        // access
+        synchronized (reg) {
             Timestamp ts = new Timestamp(System.currentTimeMillis());
             reg.put(address, ts);
-            System.out.println("... Registered " + address.getHostName() + ":" + address.getPort() + "   " + ts.toString());
+            System.out.println("... Registered " + address.getAddress().getHostAddress() + ":" + address.getPort() + "   "
+                    + ts.toString() + "   Count: " + reg.size());
         }
     }
 
     /**
-     * Get the registry. Return in ArrayList form because it is a serializable object
+     * Get the registry. Return in ArrayList form because it is a serializable
+     * object
+     * 
      * @return the registry in ArrayList form
      * @throws RemoteException
      */
@@ -60,6 +70,7 @@ public class Registry extends UnicastRemoteObject implements RegistryInterface {
 
     /**
      * Check if a socket address is already in the registry
+     * 
      * @param address the address that has to be checked
      * @throws RemoteException
      */
@@ -67,31 +78,33 @@ public class Registry extends UnicastRemoteObject implements RegistryInterface {
         return reg.containsKey(address);
     }
 
-
     // FROM HERE ON, NO MORE REMOTE METHODS
 
     /**
      * Clean the registry by old registrations
+     * 
      * @param millis the time difference allowed for the oldest registration
      */
     public void clean(long millis) {
         // synchronize in order to avoid new registrations while cleaning
-        synchronized(reg) {
-            // may take some time but it's ok
-            for(Map.Entry<InetSocketAddress, Timestamp> e : reg.entrySet()) {
-                if(System.currentTimeMillis() > e.getValue().getTime() + millis) {
-                    reg.remove(e);
-                }
-            }
+        // synchronized (reg) {
+        Iterator<Entry<InetSocketAddress, Timestamp>> iter = reg.entrySet().iterator();
+        while(iter.hasNext()){
+            Entry<InetSocketAddress,Timestamp> e = iter.next();
+            if(System.currentTimeMillis() > e.getValue().getTime() + millis) {
+                iter.remove();
+            } 
         }
+   
     }
 
     /**
      * Create a backup file serializing the registry object
+     * 
      * @param path the path at which save the file
      */
     public void backup(String path) {
-        synchronized(reg) {
+        synchronized (reg) {
             ObjectOutputStream oos = null;
             try {
                 File backup = new File(path);
@@ -100,10 +113,10 @@ public class Registry extends UnicastRemoteObject implements RegistryInterface {
                 oos.writeObject(reg);
                 oos.flush();
                 oos.close();
-            } catch(FileNotFoundException fnfe) {
+            } catch (FileNotFoundException fnfe) {
                 fnfe.printStackTrace();
                 System.exit(1);
-            } catch(IOException ioe) {
+            } catch (IOException ioe) {
                 ioe.printStackTrace();
                 System.exit(1);
             }
@@ -112,28 +125,29 @@ public class Registry extends UnicastRemoteObject implements RegistryInterface {
 
     /**
      * Restore the registry from backup
+     * 
      * @param backup the file containing the backup
      */
     // WARNING PAY ATTENTION
     @SuppressWarnings("unchecked")
     public void restore(File backup) {
-        synchronized(reg) {
+        synchronized (reg) {
             ObjectInputStream ois = null;
             try {
                 ois = new ObjectInputStream(new FileInputStream(backup));
                 reg = (Map<InetSocketAddress, Timestamp>) ois.readObject();
                 ois.close();
-            } catch(FileNotFoundException fnfe) {
+            } catch (FileNotFoundException fnfe) {
                 fnfe.printStackTrace();
                 System.exit(1);
-            } catch(IOException ioe) {
+            } catch (IOException ioe) {
                 ioe.printStackTrace();
                 System.exit(1);
-            } catch(ClassNotFoundException cnfe) {
+            } catch (ClassNotFoundException cnfe) {
                 cnfe.printStackTrace();
                 System.exit(1);
             }
-            
+
         }
     }
 

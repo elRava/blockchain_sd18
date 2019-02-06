@@ -1,0 +1,4 @@
+- Install the app.
+- Don't launch yet. If you did, try killing Wondershare Studio process under task manager.
+- Replace "WUL.Core.dll"
+- Block the app with a firewall, then launch it. 

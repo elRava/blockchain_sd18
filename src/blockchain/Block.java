@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
 import java.util.*;
+import java.io.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -14,7 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Giuseppe Ravagnani
  * @version 1.0
  */
-public class Block {
+public class Block implements Serializable {
 
     // list of fixed length. Fill with at most LIST_LENGTH transactions
     public static final int LIST_LENGTH = 4;
@@ -39,7 +40,7 @@ public class Block {
         previousHash = null;
         hash = null;
         //nonce = null;
-        tempNonce = new AtomicLong();
+        tempNonce = new AtomicLong((new Random()).nextLong());
         isMined = new AtomicBoolean(false);
         merkleRoot = null;
         minedTime = null;
@@ -115,9 +116,25 @@ public class Block {
     public Timestamp getMinedTime() {
         return minedTime;
     }
+    
+    /**
+     * Override Object equals method
+     * Two blocks are considered equal if they have the same hash
+     * @param o the object that we want to compare
+     * @return if the object is equal to this
+     */
+    @Override
+    public boolean equals(Object o) {
+        if(! (o instanceof Block)) {
+            return false;
+        }
+        if(hashToString(this.hash).equals(hashToString(((Block) o).getHash()))) {
+            return true;
+        }
+        return false;
+    }
 
     /**
-     * TODO: check if it is better to make this method static
      * Calculate the merkle root. It is calculated from the list of the hashes of the transactions
      * take two by two and calculate the hash of the concatenation of the hashes
      * then repeat the same on the list of the hashes, and so on
@@ -133,11 +150,7 @@ public class Block {
         final int SHA256LENGTH = 32;
         byte[][] pendingHash = new byte[listTransactions.size()][SHA256LENGTH];
         for(int i = 0; i < pendingHash.length; i++) {
-            //Transaction temp = (Transaction)listTransactions.get(i);
             pendingHash[i] = listTransactions.get(i).getTransactionHash();
-            //String s = temp.getTransactionHash();
-            //System.out.println("PD "+s);
-            //pendingHash[i] = temp.tranByte();
         }
         while(pendingHash.length > 1) {
             byte[][] calculated = new byte[(pendingHash.length + 1) / 2][SHA256LENGTH];
@@ -161,7 +174,6 @@ public class Block {
                     calculated[i] = pendingHash[2*i];
                 }
                 
-
             }
 
             pendingHash = calculated;
@@ -248,8 +260,7 @@ public class Block {
      * @param numThread the number of threads that will work
      */
     public void mineBlock(int difficulty, int numThread) {
-        // se abbiamo tempo evoglia dire quanti thread dedicare
-        // crea thread che mina. se numero di transazioni aumenta ricomincia
+        // start mining. if number transactions increases stop and start again
         isMining = true;
         merkleRoot = calculateMerkleRoot(listTransactions);
 
@@ -349,12 +360,9 @@ public class Block {
          */
         public void run() {
 
-            System.out.println("Creato " + Thread.currentThread().getName());
-
             while(true) {
 
                 if(isMined.get()) {
-                    //System.out.println("aaa");
                     return;
                 }
 
@@ -362,7 +370,6 @@ public class Block {
 
                 // calculate hash
                 byte[] tempHash = calculateHash(previousHash, merkleRoot, nonceCopy);
-                //System.out.println(Thread.currentThread().getName() + "   nonce " + nonceCopy + "   " + hashToString(tempHash));
 
                 // verify correctness
                 if(! verifyHash(tempHash, difficulty)) {
