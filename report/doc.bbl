@@ -1,0 +1,16 @@
+\begin{thebibliography}{1}
+\expandafter\ifx\csname fonteauteurs\endcsname\relax
+\def\fonteauteurs{\scshape}\fi
+
+\bibitem{small}
+I.P. \bgroup\fonteauteurs\bgroup Freely\egroup\egroup{} :
+\newblock A small paper.
+\newblock {\em The journal of small papers}, -1, 1997.
+\newblock to appear.
+
+\bibitem{big}
+Hugh \bgroup\fonteauteurs\bgroup Jass\egroup\egroup{} :
+\newblock A big paper.
+\newblock {\em The journal of big papers}, MCMXCVII, 7991.
+
+\end{thebibliography}

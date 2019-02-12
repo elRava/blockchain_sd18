@@ -1,0 +1,46 @@
+\documentclass[11pt]{report}
+
+\usepackage{lib/utt-report-template}
+\usepackage{lipsum}
+\usepackage{hyperref}
+
+
+\title{Blockchain per Voto Elettronico} % Max 144 chars
+
+\schooltutor{}
+\semester{2018-19}
+\branch{}
+\abstracttext{
+\lipsum[1]
+} % Max 150 words
+
+\companyname{}
+\companyplace{}
+\companytutor{}
+\companylogo{company-logo.png}
+
+\keywordone{Logo BDE}
+\keywordtwo{Cravate}
+\keywordthree{Yucca}
+\keywordfour{Robotik}
+
+\begin{document}
+    \frontpage
+    %\include{parts/00-remerciements}
+    \pagenumbering{arabic}
+    \tableofcontents
+
+    \include{parts/01-introduction}
+    \include{parts/02-specifiche}
+    \include{parts/03-struttura}
+    \include{parts/04-utilizzo}
+    \include{parts/05-team}
+    \include{parts/06-risultati}
+
+    \appendix
+    %\include{parts/05-Annexes}
+
+    \nocite{*}
+    \bibliographystyle{plain-it}
+    \bibliography{references}
+\end{document}

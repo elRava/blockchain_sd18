@@ -1,0 +1,20 @@
+\babel@toc {french}{}
+\contentsline {chapter}{\numberline {1}Introduction}{2}% 
+\contentsline {chapter}{\numberline {2}Pr\IeC {\'e}sentation}{3}% 
+\contentsline {chapter}{\numberline {3}Stage}{5}% 
+\contentsline {section}{\numberline {3.1}Le sujet}{5}% 
+\contentsline {subsection}{\numberline {3.1.1}Sujet d\IeC {\'e}fini avant mon arriv\IeC {\'e}e}{5}% 
+\contentsline {subsection}{\numberline {3.1.2}Sujet(s) r\IeC {\'e}el(s)}{5}% 
+\contentsline {section}{\numberline {3.2}Place (r\IeC {\^o}le, fonction) occup\IeC {\'e}e dans le service}{6}% 
+\contentsline {section}{\numberline {3.3}D\IeC {\'e}roulement du travail}{7}% 
+\contentsline {subsection}{\numberline {3.3.1}Description de l'\IeC {\'e}tude \IeC {\`a} r\IeC {\'e}aliser ou du probl\IeC {\`e}me \IeC {\`a} r\IeC {\'e}soudre}{7}% 
+\contentsline {subsection}{\numberline {3.3.2}Ant\IeC {\'e}c\IeC {\'e}dents (\IeC {\'e}tudes ant\IeC {\'e}rieures, n\IeC {\'e}cessit\IeC {\'e} de cette recherche)}{7}% 
+\contentsline {subsection}{\numberline {3.3.3}Description de la m\IeC {\'e}thode choisie et des objectifs vis\IeC {\'e}s}{7}% 
+\contentsline {subsection}{\numberline {3.3.4}Planning pr\IeC {\'e}visionnel du travail}{8}% 
+\contentsline {subsection}{\numberline {3.3.5}Application de la m\IeC {\'e}thode}{8}% 
+\contentsline {subsection}{\numberline {3.3.6}Discussion des r\IeC {\'e}sultats par rapport \IeC {\`a} l'objectif vis\IeC {\'e} et planning r\IeC {\'e}el}{8}% 
+\contentsline {chapter}{\numberline {4}Conclusion}{10}% 
+\contentsline {section}{\numberline {4.1}Synth\IeC {\`e}se des r\IeC {\'e}sultats sur le travail}{10}% 
+\contentsline {section}{\numberline {4.2}Observations}{10}% 
+\contentsline {chapter}{\numberline {A}Titre 1}{11}% 
+\contentsline {chapter}{\numberline {B}Titre 2}{13}% 

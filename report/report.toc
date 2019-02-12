@@ -1,0 +1,8 @@
+\babel@toc {italian}{}
+\babel@toc {italian}{}
+\contentsline {chapter}{Introduzione}{2}{chapter*.2}% 
+\contentsline {chapter}{Specifiche del Progetto}{3}{chapter*.3}% 
+\contentsline {chapter}{Implementazione e Struttura del Progetto}{4}{chapter*.4}% 
+\contentsline {chapter}{Utilizzo}{5}{chapter*.5}% 
+\contentsline {chapter}{Team}{6}{chapter*.6}% 
+\contentsline {chapter}{Risultati}{7}{chapter*.7}% 

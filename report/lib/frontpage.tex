@@ -1,0 +1,66 @@
+\begin{titlepage}.
+    \input{lib/overlay.tikz}
+
+    % Margin to begin the text under the uttsquare
+    \vspace{2.5cm}
+
+    % Internship title
+    \begin{textblock*}{15cm}(3cm,4cm)
+        \begin{Huge}
+            \begin{center}
+                \makeatletter
+                \noindent\textcolor{black}{\@title}
+                \makeatother
+            \end{center}
+        \end{Huge}
+    \end{textblock*}
+
+    % Info box
+    \begin{textblock*}{15cm}(2.5cm,8cm)
+        \makeatletter
+        \begin{large}
+            \setcellgapes{4pt}
+            \makegapedcells
+            {\color{black}\begin{tabularx}{15cm}{XX}
+                \text{Autore1}& \text{Autore2} \\
+                \textbf{Corso:} \text{Sistemi Distribuiti} & \textbf{Anno Accademico:} \@semester
+            \end{tabularx}}
+        \end{large}
+        \makeatother
+    \end{textblock*}
+
+    % Abstract
+    \begin{textblock*}{15cm}(3cm,12cm)
+        \begin{large}
+            \begin{center}
+                \textbf{Abstract}
+            \end{center}
+
+            \makeatletter
+            
+            Descrivere la situazione attuale, la scelta di usare blockchain nel voto elettronico. Ricordiamo che è una nostra soluzione             
+            
+            \makeatother
+        \end{large}
+    \end{textblock*}
+
+    \begin{textblock*}{15cm}(3cm,19.5cm)
+		\setlength\columnsep{2cm}
+        \begin{multicols}{2}
+            \begin{large}
+                \noindent \textbf{Autore1} \makeatletter \@companyname \makeatother\\
+                \textbf{mail:} \makeatletter \@companyplace \makeatother\\
+                \textbf{contatto:} \makeatletter \@companytutor \makeatother
+
+                \columnbreak
+
+				
+                {\color{white}\begin{large}
+                    \noindent \textbf{Autore2} \makeatletter \@companyname \makeatother\\
+                    \textbf{mail:} \makeatletter \@companyplace \makeatother\\
+                    \textbf{contatto:} \makeatletter \@companytutor \makeatother
+                \end{large}}
+            \end{large}
+        \end{multicols}
+    \end{textblock*}
+\end{titlepage}

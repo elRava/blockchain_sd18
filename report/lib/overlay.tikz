@@ -1,0 +1,39 @@
+\begin{tikzpicture}[remember picture,overlay]
+
+
+% Logo UTT
+\coordinate [left=-13mm, below=-15mm] (uttlogo_anchor) at (current page.south west);
+\node [name=uttlogo,
+anchor=south west,
+] at (uttlogo_anchor){
+\includegraphics[width=5.5cm]{logo-unipd.png}};
+
+% Logo company
+\coordinate [right=-13mm, below=-15mm] (companylogo_anchor) at (current page.south east);
+\node [name=companylogo,
+anchor=south east,
+] at (companylogo_anchor){
+\url{https://github.com/elRava/blockchain_sd18}};
+
+% Logo company
+\coordinate [right=-13mm, below=-22mm] (companylogo_anchor2) at (current page.south east);
+\node [name=companylogo,
+anchor=south east,
+] at (companylogo_anchor2){
+\Large{Codice disponibile su github}};
+
+% keywords panel
+\coordinate [right=-13mm, below=-47mm] (keywords_panel_anchor) at (current page.south east);
+\node [name=keywords_panel,
+anchor=south east,
+] at (keywords_panel_anchor){
+\includegraphics[width=9cm]{keywords-panel.png}};
+
+% company panel
+\coordinate [left=-23mm, below=-47mm] (company_panel_anchor) at (current page.south west);
+\node [name=company_panel,
+anchor=south west,
+] at (company_panel_anchor){
+\includegraphics[width=8cm,height=3.45cm]{company-panel.png}};
+
+\end{tikzpicture}

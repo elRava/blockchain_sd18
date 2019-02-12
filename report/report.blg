@@ -1,0 +1,14 @@
+This is BibTeX, Version 0.99dThe top-level auxiliary file: report.aux
+A level-1 auxiliary file: lib/frontpage.aux
+A level-1 auxiliary file: parts/01-introduction.aux
+A level-1 auxiliary file: parts/02-presentation.aux
+A level-1 auxiliary file: parts/03-stage.aux
+A level-1 auxiliary file: parts/04-conclusion.aux
+A level-1 auxiliary file: parts/05-Annexes.aux
+I couldn't open style file plain-it.bst
+---line 12 of file report.aux
+ : \bibstyle{plain-it
+ :                   }
+I'm skipping whatever remains of this command
+I found no style file---while reading file report.aux
+(There were 2 error messages)
